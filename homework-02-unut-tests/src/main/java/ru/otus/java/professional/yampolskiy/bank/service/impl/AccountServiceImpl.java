@@ -25,7 +25,6 @@ public class AccountServiceImpl implements AccountService {
         account.setNumber(accountNumber);
         account.setType(type);
         account.setAmount(amount);
-
         return accountDao.save(account);
     }
 
@@ -58,22 +57,16 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new AccountException("No source account"));
         Account destinationAccount = accountDao.findById(destinationAccountId)
                 .orElseThrow(() -> new AccountException("No destination account"));
-
         if (sourceAccount.getAmount().compareTo(sum) < 0) {
             return false;
         }
-
         if (sum.compareTo(BigDecimal.ZERO) <= 0) {
             return false;
         }
-
         sourceAccount.setAmount(sourceAccount.getAmount().subtract(sum));
         destinationAccount.setAmount(destinationAccount.getAmount().add(sum));
-
         accountDao.save(sourceAccount);
         accountDao.save(destinationAccount);
-
         return true;
     }
-
 }
