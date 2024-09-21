@@ -59,9 +59,6 @@ public class AccountServiceImpl implements AccountService {
         Account destinationAccount = accountDao.findById(destinationAccountId)
                 .orElseThrow(() -> new AccountException("No destination account"));
 
-        sourceAccount.setAmount(sourceAccount.getAmount().subtract(sum));
-        destinationAccount.setAmount(destinationAccount.getAmount().add(sum));
-
         if (sourceAccount.getAmount().compareTo(sum) < 0) {
             return false;
         }
@@ -69,6 +66,9 @@ public class AccountServiceImpl implements AccountService {
         if (sum.compareTo(BigDecimal.ZERO) <= 0) {
             return false;
         }
+
+        sourceAccount.setAmount(sourceAccount.getAmount().subtract(sum));
+        destinationAccount.setAmount(destinationAccount.getAmount().add(sum));
 
         accountDao.save(sourceAccount);
         accountDao.save(destinationAccount);
