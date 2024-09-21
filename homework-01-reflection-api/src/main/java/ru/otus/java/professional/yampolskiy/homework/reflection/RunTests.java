@@ -10,12 +10,20 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
+
+import static ru.otus.java.professional.yampolskiy.homework.reflection.RunTests.TestStatisticKey.*;
 
 public class RunTests {
+    private static final Map<TestStatisticKey, Integer> statistics = new HashMap<>();
+
+    static {
+        statistics.put(TOTAL_TESTS, 0);
+        statistics.put(TestStatisticKey.PASSED, 0);
+        statistics.put(TestStatisticKey.FAILED, 0);
+        statistics.put(TestStatisticKey.DISABLED, 0);
+    }
+
     public static void execute() throws IOException, ClassNotFoundException {
         List<Class<?>> testClasses = scanDirectory("ru.otus.java.professional.yampolskiy.homework.reflection.tests");
         if (!testClasses.isEmpty())
@@ -63,7 +71,7 @@ public class RunTests {
 
     private static boolean validationTestClass(Class<?> testClass) {
         if (testClass.isAnnotationPresent(Disabled.class)) {
-            System.out.println("Класс: " + testClass.getSimpleName()+ " отключен");
+            System.out.println("Класс: " + testClass.getSimpleName() + " отключен");
             System.out.println("Причина отключения: " + (testClass.getAnnotation(Disabled.class).message().isEmpty() ? "Не указана" : testClass.getAnnotation(Disabled.class).message()));
         }
 
@@ -90,8 +98,10 @@ public class RunTests {
                         ((hasBeforeSuite ? "@BeforeSuite" : "@AfterSuite")) + " и @Test.");
             }
 
-            if (hasTest)
+            if (hasTest) {
+                statistics.put(TOTAL_TESTS, statistics.get(TOTAL_TESTS) + 1);
                 isTestClass = hasTest;
+            }
         }
 
         if (beforeSuiteCount > 1)
@@ -113,11 +123,13 @@ public class RunTests {
                     beforeSuite = method;
                 if (method.isAnnotationPresent(AfterSuite.class))
                     afterSuite = method;
-                if (method.isAnnotationPresent(Test.class) && !method.isAnnotationPresent(Disabled.class))
+                if (method.isAnnotationPresent(Test.class) && !method.isAnnotationPresent(Disabled.class)) {
                     testMethods.add(method);
+                }
                 if (method.isAnnotationPresent(Disabled.class)) {
                     System.out.println("Метод: " + method + " отключен");
                     System.out.println("Причина отключения: " + (method.getAnnotation(Disabled.class).message().isEmpty() ? "Не указана" : method.getAnnotation(Disabled.class).message()));
+                    statistics.put(DISABLED, statistics.get(DISABLED) + 1);
                 }
             }
 
@@ -137,11 +149,40 @@ public class RunTests {
                 try {
                     System.out.println();
                     method.invoke(null);
+                    if(method.isAnnotationPresent(Test.class))
+                        statistics.put(PASSED, statistics.get(PASSED) + 1);
                 } catch (InvocationTargetException | IllegalAccessException e) {
                     System.out.println("Метод упал с ошибкой: " + e);
+                    statistics.put(FAILED, statistics.get(FAILED) + 1);
                 }
             }
 
+        }
+    }
+
+    public static void getStatistic(){
+        System.out.println();
+        System.out.println();
+        System.out.println("Статистика:");
+        for (TestStatisticKey key : TestStatisticKey.values()) {
+            System.out.println(key.getDescription() + statistics.get(key));
+        }
+    }
+
+    public enum TestStatisticKey {
+        TOTAL_TESTS("Всего тестов: "),
+        PASSED("Успешно пройдено: "),
+        FAILED("Не прошло: "),
+        DISABLED("Отключено: ");
+
+        private final String description;
+
+        TestStatisticKey(String description) {
+            this.description = description;
+        }
+
+        public String getDescription() {
+            return description;
         }
     }
 
