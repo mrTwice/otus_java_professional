@@ -34,6 +34,10 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private <T> List<T> iterableToList(Iterable<T> src) {
+        if (src == null) {
+            return new ArrayList<>();
+        }
+
         ArrayList<T> result = new ArrayList<>();
         src.forEach(result::add);
         return result;
