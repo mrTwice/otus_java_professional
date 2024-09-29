@@ -61,7 +61,7 @@ class AccountServiceImplTest {
                 account.getAgreementId().equals(agreement.getId()) &&
                         account.getNumber().equals(accountNumber) &&
                         account.getType().equals(type) &&
-                        account.getAmount().compareTo(amount) == 0
+                        account.getAmount().equals(amount)
         ));
         assertEquals(expectedAccount, result);
     }
@@ -78,7 +78,7 @@ class AccountServiceImplTest {
         account2.setAgreementId(200L);
 
         return Stream.of(
-                Arguments.of(Arrays.asList(account1, account2), Arrays.asList(account1, account2)),
+                Arguments.of(List.of(account1, account2), List.of(account1, account2)),
                 Arguments.of(Collections.emptyList(), Collections.emptyList()),
                 Arguments.of(null, Collections.emptyList())
         );
@@ -95,16 +95,6 @@ class AccountServiceImplTest {
 
 
     private static Stream<Arguments> provideParametersForChargeMethod() {
-        Account account1 = new Account();
-        account1.setId(1L);
-        account1.setAmount(new BigDecimal(100));
-        account1.setAgreementId(100L);
-
-        Account account2 = new Account();
-        account2.setId(2L);
-        account2.setAmount(new BigDecimal(50));
-        account2.setAgreementId(200L);
-
         return Stream.of(
                 Arguments.of(1L, new BigDecimal("100.00"), new BigDecimal("50.00"), new BigDecimal("50.00"), true, null),
                 Arguments.of(2L, new BigDecimal("50.00"), new BigDecimal("50.00"), new BigDecimal("0.00"), true, null),
@@ -116,9 +106,11 @@ class AccountServiceImplTest {
     @ParameterizedTest
     @MethodSource("provideParametersForChargeMethod")
     void testCharge(Long accountId, BigDecimal initialAmount, BigDecimal chargeAmount, BigDecimal expectedBalance, boolean expectedResult, String expectedExceptionMessage) {
-        Optional<Account> accountFromDao = initialAmount != null
-                ? Optional.of(createAccount(accountId, initialAmount))
-                : Optional.empty();
+//        Optional<Account> accountFromDao = initialAmount != null
+//                ? Optional.of(createAccount(accountId, initialAmount))
+//                : Optional.empty();
+        Optional<Account> accountFromDao = Optional.ofNullable(initialAmount)
+                        .map(amount -> createAccount(accountId, amount));
 
         when(accountDao.findById(accountId)).thenReturn(accountFromDao);
 
@@ -162,7 +154,7 @@ class AccountServiceImplTest {
     @ParameterizedTest
     @MethodSource("provideParametersForTestGetAccounts")
     void testGetAccounts(Agreement agreement, List<Account> expectedAccounts) {
-        when(accountDao.findByAgreementId(agreement.getId())).thenReturn(expectedAccounts);
+        when(accountDao.findByAgreementId(anyLong())).thenReturn(expectedAccounts);
         List<Account> actualAccounts = accountServiceImpl.getAccounts(agreement);
         Assertions.assertEquals(expectedAccounts, actualAccounts);
     }
@@ -187,14 +179,7 @@ class AccountServiceImplTest {
         lenient().when(accountDao.findById(sourceAccountId)).thenReturn(sourceAccountId == 999L ? Optional.empty() : Optional.of(sourceAccount));
         lenient().when(accountDao.findById(destinationAccountId)).thenReturn(destinationAccountId == 999L ? Optional.empty() : Optional.of(destinationAccount));
 
-        if (sourceAccountId == 999L) {
-            Assertions.assertThrows(AccountException.class, () -> {
-                accountServiceImpl.makeTransfer(sourceAccountId, destinationAccountId, transferSum);
-            });
-            return;
-        }
-
-        if (destinationAccountId == 999L) {
+        if (sourceAccountId == 999L || destinationAccountId == 999L) {
             Assertions.assertThrows(AccountException.class, () -> {
                 accountServiceImpl.makeTransfer(sourceAccountId, destinationAccountId, transferSum);
             });

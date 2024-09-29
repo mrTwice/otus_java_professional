@@ -1,13 +1,11 @@
 package ru.otus.java.professional.yampolskiy.bank.service.impl;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.otus.java.professional.yampolskiy.bank.dao.AgreementDao;
 import ru.otus.java.professional.yampolskiy.bank.entity.Agreement;
