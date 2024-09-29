@@ -1,3 +1,4 @@
 rootProject.name = 'otus_java_professional'
 include 'homework-02-unut-tests'
+include 'homework-03-stream-api'
 
