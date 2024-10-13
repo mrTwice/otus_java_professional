@@ -91,21 +91,23 @@ public class PrioritizedThreadPoolExecutor implements ExecutorService {
         if (!(command instanceof PrioritizedRunnable)) {
             command = new PrioritizedTask(command, 0);
         }
-        if (!isShutdown.get()) {
-            try {
-                taskQueue.put((PrioritizedRunnable) command);
-            } catch (InterruptedException e) {
-                //
-            }
-        } else {
-            throw new IllegalStateException("Пул потоков остановлен");
+
+        if (isShutdown.get()) {
+            throw new IllegalStateException("Пул потоков закрыт. Новые задачи не принимаются.");
+        }
+
+        try {
+            taskQueue.put((PrioritizedRunnable) command);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Поток был прерван во время добавления задачи", e);
         }
     }
 
     @Override
     public void shutdown() {
         if (isShutdown.compareAndSet(false, true)) {
-            workers.forEach(Thread::interrupt);
+            System.out.println("Инициировано плавное завершение пула потоков");
         }
         checkTermination();
     }

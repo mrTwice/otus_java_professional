@@ -9,7 +9,7 @@ public class Main {
     private static Random random = new Random();
 
     public static void main(String[] args) {
-        ExecutorService threadPool = new PrioritizedThreadPoolExecutor(3);
+        ExecutorService threadPool = new PrioritizedThreadPoolExecutor(1);
 
         List<PrioritizedTask> list = new ArrayList<>();
 
@@ -21,6 +21,9 @@ public class Main {
         }
 
         list.forEach(threadPool::execute);
+
+        threadPool.shutdown();
+
     }
 
 }
