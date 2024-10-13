@@ -9,22 +9,18 @@ public class Main {
 
     public static void main(String[] args) {
         List<Task> tasks = taskFactory.getTasks(10);
-
-        //*Список задач со статусом “В работе”.
         List<Task> inProgress = tasks.stream()
-                .filter(task -> task.getStatus().equals(TaskStatus.IN_PROGRESS))
+                .filter(task -> TaskStatus.IN_PROGRESS.equals(task.getStatus()))
                 .toList();
         inProgress.forEach(System.out::println);
 
-        //*Количество задач со статусом “Закрыта”.
         Long closedTasksCount = tasks.stream()
                 .filter(task -> task.getStatus().equals(TaskStatus.CLOSED))
                 .count();
 
-        //*Наличие задачи и отсутствие задачи
         Long existId = getExistId(tasks);
         boolean isExist = tasks.stream()
-                .anyMatch(task -> task.getId().equals(existId));
+                .anyMatch(task -> existId.equals(task.getId()));
         System.out.printf("Есть ли в списке задача с id = %s: %b\n", existId, isExist);
 
         Long notExistId = getNotExistId(tasks);
@@ -32,13 +28,11 @@ public class Main {
                 .noneMatch(task -> task.getId().equals(notExistId));
         System.out.printf("Отсутствует ли в списке задача с id = %s: %b\n", notExistId, notExist);
 
-        //* Список задач, отсортированных по статусу.
         List<Task> sorted = tasks.stream()
                 .sorted(Comparator.comparing(Task::getStatus))
                 .toList();
         sorted.forEach(System.out::println);
 
-        //* Объединение сначала в группы по статусам, а потом(внутри каждой группы) в подгруппы четных и нечетных по ID.
         Map<TaskStatus, Map<String, List<Task>>> groupedTasks = tasks.stream()
                 .collect(Collectors.groupingBy(Task::getStatus,
                         Collectors.groupingBy(task -> task.getId() % 2 == 0 ? "Четные ID" : "Нечетные ID")));
@@ -51,8 +45,6 @@ public class Main {
             });
         });
 
-
-        //* Разбивку на две группы: со статусом “Закрыто”и остальное.
         Map<Boolean, List<Task>> partitionedTasks = tasks.stream()
                 .collect(Collectors.partitioningBy(task -> task.getStatus().equals(TaskStatus.CLOSED)));
 
