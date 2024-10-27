@@ -1,5 +1,9 @@
 package ru.otus.java.professional.yampolskiy.multithreading;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -12,6 +16,7 @@ public class PrioritizedThreadPoolExecutor implements ExecutorService {
     private final AtomicBoolean isShutdown;
     private final AtomicBoolean isTerminated;
     private final Object terminationLock = new Object();
+    private final Logger logger = LogManager.getLogger();
 
     private class Worker extends Thread {
         public Worker(String name) {
@@ -26,7 +31,7 @@ public class PrioritizedThreadPoolExecutor implements ExecutorService {
                         break;
                     }
                     try {
-                        PrioritizedRunnable task = taskQueue.poll(1, TimeUnit.SECONDS);
+                        Runnable task = taskQueue.poll(1, TimeUnit.SECONDS);
                         if (task != null) {
                             task.run();
                         }
@@ -35,7 +40,7 @@ public class PrioritizedThreadPoolExecutor implements ExecutorService {
                             break;
                         }
                     } catch (Exception e) {
-                        System.out.println(e.getMessage());
+                        logger.log(Level.ERROR, e);
                     }
                 }
             } finally {
@@ -209,7 +214,7 @@ public class PrioritizedThreadPoolExecutor implements ExecutorService {
                 try {
                     return future.get();
                 } catch (ExecutionException e) {
-                    // Игнорируем и продолжаем
+                    logger.log(Level.ERROR, e);
                 }
             }
             throw new ExecutionException("Задача не была выполнена", null);
@@ -234,7 +239,7 @@ public class PrioritizedThreadPoolExecutor implements ExecutorService {
                 try {
                     return future.get(remaining, TimeUnit.MILLISECONDS);
                 } catch (ExecutionException e) {
-                    // Игнорируем и продолжаем
+                    logger.log(Level.ERROR, e);
                 }
             }
             throw new ExecutionException("Задача не была выполнена", null);
