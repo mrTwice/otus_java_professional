@@ -9,7 +9,7 @@ public class Main {
     private static Random random = new Random();
 
     public static void main(String[] args) {
-        ExecutorService threadPool = new PrioritizedThreadPoolExecutor(1);
+        ExecutorService threadPool = new PrioritizedThreadPoolExecutor(8);
 
         List<PrioritizedTask> list = new ArrayList<>();
 
