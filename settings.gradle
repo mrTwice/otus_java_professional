@@ -3,4 +3,5 @@ include 'homework-01-reflection-api'
 include 'homework-02-unut-tests'
 include 'homework-03-stream-api'
 include 'homework-04-multithreading'
+include 'homework-05-patterns-part-one'
 
