@@ -7,3 +7,4 @@
 * ### [Домашнее задание №3: Stream Api](homework-03-stream-api/README.md)
 * ### [Домашнее задание №4: Multithreading](homework-04-multithreading/README.md)
 * ### [Домашнее задание №5: Patterns Part One](homework-05-patterns-part-one/README.md)
+* ### [Домашнее задание №6: Patterns Part Two](homework-06-patterns-part-two/README.md)
