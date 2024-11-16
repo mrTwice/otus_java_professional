@@ -1,126 +1,97 @@
 package ru.otus.java.professional.yampolskiy.patterns.one;
 
+
 import java.awt.*;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
-
-import static java.awt.Color.*;
 
 public class Box<T extends Matryoshka<Color>> {
     private final T red;
     private final T blue;
     private final T green;
     private final T magenta;
+
     public Box(T red, T blue, T green, T magenta) {
         this.red = red;
         this.blue = blue;
         this.green = green;
         this.magenta = magenta;
     }
-    public SmallFirstIterator getSmallFirstIterator(){
+
+    public SmallFirstIterator getSmallFirstIterator() {
         return new SmallFirstIterator();
     }
 
-    public ColorFirstIterator getColorFirstIterator(){
+    public ColorFirstIterator getColorFirstIterator() {
         return new ColorFirstIterator();
     }
 
     public class SmallFirstIterator implements Iterator<String> {
-
-        int cursorRed;
-        int cursorBlue;
-        int cursorGreen;
-        int cursorMagenta;
-        Color nextColor = Color.RED;
+        private final List<T> matryoshkas = List.of(red, blue, green, magenta);
+        private final int[] cursors = new int[matryoshkas.size()];
+        private int currentIndex = 0;
 
         @Override
         public boolean hasNext() {
-            return cursorRed < red.getItems().size() ||
-                    cursorBlue < blue.getItems().size() ||
-                    cursorGreen < green.getItems().size() ||
-                    cursorMagenta < magenta.getItems().size();
-        }
-
-        @Override
-        public String next() {
-            while (true) {
-                if (nextColor.equals(Color.RED) && cursorRed < red.getItems().size()) {
-                    nextColor = BLUE;
-                    return getElementAndIncrementCursor(red.getColorName(), cursorRed++, red);
-                } else if (nextColor.equals(BLUE) && cursorBlue < blue.getItems().size()) {
-                    nextColor = GREEN;
-                    return getElementAndIncrementCursor(blue.getColorName(), cursorBlue++, blue);
-                } else if (nextColor.equals(GREEN) && cursorGreen < green.getItems().size()) {
-                    nextColor = MAGENTA;
-                    return getElementAndIncrementCursor(green.getColorName(), cursorGreen++, green);
-                } else if (nextColor.equals(MAGENTA) && cursorMagenta < magenta.getItems().size()) {
-                    nextColor = Color.RED;
-                    return getElementAndIncrementCursor(magenta.getColorName(), cursorMagenta++, magenta);
+            for (int i = 0; i < matryoshkas.size(); i++) {
+                if (cursors[i] < matryoshkas.get(i).getItems().size()) {
+                    return true;
                 }
-                rotateNextColor();
-                if (!hasNext()) throw new NoSuchElementException("Элементов удовлетворяющих условиям нет");
             }
-        }
-
-        private void rotateNextColor() {
-            if (nextColor.equals(Color.RED)) {
-                nextColor = Color.BLUE;
-            } else if (nextColor.equals(Color.BLUE)) {
-                nextColor = Color.GREEN;
-            } else if (nextColor.equals(Color.GREEN)) {
-                nextColor = Color.MAGENTA;
-            } else if (nextColor.equals(Color.MAGENTA)) {
-                nextColor = Color.RED;
-            } else {
-                throw new RuntimeException("Неизвестный цвет");
-            }
-        }
-
-        private String getElementAndIncrementCursor(String colorName, int index, T matryoshka) {
-            return colorName + matryoshka.getItems().get(index);
-        }
-    }
-
-    public class ColorFirstIterator implements Iterator<String>{
-
-        int cursorRed;
-        int cursorBlue;
-        int cursorGreen;
-        int cursorMagenta;
-        boolean redIsAvailable;
-        boolean blueIsAvailable;
-        boolean greenIsAvailable;
-        boolean magentaIsAvailable;
-
-        @Override
-        public boolean hasNext() {
-            redIsAvailable = cursorRed < red.getItems().size();
-            blueIsAvailable = cursorBlue < blue.getItems().size();
-            greenIsAvailable = cursorGreen < green.getItems().size();
-            magentaIsAvailable = cursorMagenta < magenta.getItems().size();
-            return redIsAvailable || blueIsAvailable || greenIsAvailable || magentaIsAvailable;
+            return false;
         }
 
         @Override
         public String next() {
-            if (redIsAvailable) {
-                return getElementAndIncrementCursor(red.getColorName(), cursorRed++, red);
-            }
-            if (blueIsAvailable) {
-                return getElementAndIncrementCursor(blue.getColorName(), cursorBlue++, blue);
-            }
-            if (greenIsAvailable) {
-                return getElementAndIncrementCursor(green.getColorName(), cursorGreen++, green);
-            }
-            if (magentaIsAvailable) {
-                return getElementAndIncrementCursor(magenta.getColorName(), cursorMagenta++, magenta);
+            for (int i = 0; i < matryoshkas.size(); i++) {
+                int index = (currentIndex + i) % matryoshkas.size();
+                T matryoshka = matryoshkas.get(index);
+                int cursor = cursors[index];
+
+                if (cursor < matryoshka.getItems().size()) {
+                    cursors[index]++;
+                    currentIndex = (index + 1) % matryoshkas.size();
+                    return getElementAndIncrementCursor(matryoshka.getColorName(), cursor, matryoshka);
+                }
             }
             throw new NoSuchElementException("Элементов удовлетворяющих условиям нет");
         }
 
-        private String getElementAndIncrementCursor(String colorName, int index, T matryoshka) {
-            return colorName + matryoshka.getItems().get(index);
+
+    }
+
+    public class ColorFirstIterator implements Iterator<String> {
+
+        private final List<T> matryoshkas = List.of(red, blue, green, magenta); // Список всех матрёшек
+        private final int[] cursors = new int[matryoshkas.size()]; // Курсоры для каждой матрёшки
+
+        @Override
+        public boolean hasNext() {
+            for (int i = 0; i < matryoshkas.size(); i++) {
+                if (cursors[i] < matryoshkas.get(i).getItems().size()) {
+                    return true;
+                }
+            }
+            return false;
         }
+
+        @Override
+        public String next() {
+            for (int i = 0; i < matryoshkas.size(); i++) {
+                if (cursors[i] < matryoshkas.get(i).getItems().size()) {
+                    T matryoshka = matryoshkas.get(i);
+                    int cursor = cursors[i]++;
+                    return getElementAndIncrementCursor(matryoshka.getColorName(), cursor, matryoshka);
+                }
+            }
+            throw new NoSuchElementException("Элементов удовлетворяющих условиям нет");
+        }
+
+    }
+
+    protected String getElementAndIncrementCursor(String colorName, int index, T matryoshka) {
+        return colorName + matryoshka.getItems().get(index);
     }
 
 }
