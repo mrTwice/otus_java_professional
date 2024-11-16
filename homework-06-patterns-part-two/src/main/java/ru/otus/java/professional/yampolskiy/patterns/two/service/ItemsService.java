@@ -2,6 +2,7 @@ package ru.otus.java.professional.yampolskiy.patterns.two.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.professional.yampolskiy.patterns.two.repository.Repository;
 import ru.otus.java.professional.yampolskiy.patterns.two.configuration.DataSource;
 import ru.otus.java.professional.yampolskiy.patterns.two.model.Item;
 import ru.otus.java.professional.yampolskiy.patterns.two.repository.ItemsDao;
@@ -11,14 +12,14 @@ import java.util.Random;
 
 public class ItemsService implements Service{
     private final Logger logger = LogManager.getLogger(ItemsService.class);
-    private static ItemsService INSTANCE;
-    private final ItemsDao itemsDao;
+    private static Service INSTANCE;
+    private final Repository itemsDao;
 
     private ItemsService() {
         itemsDao = ItemsDao.getInstance();
     }
 
-    public static ItemsService getInstance() {
+    public static Service getInstance() {
         if (INSTANCE == null) {
             synchronized (DataSource.class) {
                 if (INSTANCE == null) {
@@ -43,9 +44,7 @@ public class ItemsService implements Service{
 
         for (Item item : items) {
             try {
-                // Увеличиваем цену в 2 раза
                 item.setPrice(item.getPrice() * 2);
-                // Обновляем объект в БД
                 itemsDao.update(item);
                 logger.info("Цена для объекта с id={} успешно обновлена.", item.getId());
             } catch (Exception e) {

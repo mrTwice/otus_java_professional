@@ -30,7 +30,6 @@ public class ItemsDao implements Repository {
         return INSTANCE;
     }
 
-
     @Override
     public Optional<Item> getById(Long itemId) {
         final String query = "SELECT * FROM items WHERE id = ?";
@@ -68,19 +67,16 @@ public class ItemsDao implements Repository {
     public Optional<Item> add(Item newItem) {
         validateItem(newItem);
         final String query = "INSERT INTO items (title, price) VALUES (?, ?)";
-        try (Connection connection = dataSource.getConnection()) {
-            executeInTransaction(connection, conn -> {
-                try (PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-                    statement.setString(1, newItem.getTittle());
-                    statement.setDouble(2, newItem.getPrice());
-                    statement.executeUpdate();
-                    try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-                        if (generatedKeys.next()) {
-                            newItem.setId(generatedKeys.getLong(1));
-                        }
-                    }
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, newItem.getTittle());
+            statement.setDouble(2, newItem.getPrice());
+            statement.executeUpdate();
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    newItem.setId(generatedKeys.getLong(1));
                 }
-            });
+            }
         } catch (SQLException e) {
             logger.error("Ошибка добавления элемента: title={}, error={}", newItem.getTittle(), e.getMessage(), e);
             return Optional.empty();
@@ -93,62 +89,52 @@ public class ItemsDao implements Repository {
         validateItem(item);
         final String updateQuery = "UPDATE items SET title = ?, price = ? WHERE id = ?";
         final String selectQuery = "SELECT * FROM items WHERE id = ?";
-        final Item[] updatedItem = new Item[1];
+        Item updatedItem = null;
 
-        try (Connection connection = dataSource.getConnection()) {
-            executeInTransaction(connection, conn -> {
-                try (PreparedStatement updateStatement = conn.prepareStatement(updateQuery)) {
-                    updateStatement.setString(1, item.getTittle());
-                    updateStatement.setDouble(2, item.getPrice());
-                    updateStatement.setLong(3, item.getId());
-                    updateStatement.executeUpdate();
-                }
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
+             PreparedStatement selectStatement = connection.prepareStatement(selectQuery)) {
+            updateStatement.setString(1, item.getTittle());
+            updateStatement.setDouble(2, item.getPrice());
+            updateStatement.setLong(3, item.getId());
+            updateStatement.executeUpdate();
 
-                try (PreparedStatement selectStatement = conn.prepareStatement(selectQuery)) {
-                    selectStatement.setLong(1, item.getId());
-                    try (ResultSet resultSet = selectStatement.executeQuery()) {
-                        if (resultSet.next()) {
-                            updatedItem[0] = mapResultSetToItem(resultSet);
-                        }
-                    }
+            selectStatement.setLong(1, item.getId());
+            try (ResultSet resultSet = selectStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    updatedItem = mapResultSetToItem(resultSet);
                 }
-            });
+            }
         } catch (SQLException e) {
             logger.error("Ошибка обновления элемента с id={}: {}", item.getId(), e.getMessage(), e);
         }
 
-        return Optional.ofNullable(updatedItem[0]);
+        return Optional.ofNullable(updatedItem);
     }
 
     @Override
     public Optional<Item> delete(Long itemId) {
         final String selectQuery = "SELECT * FROM items WHERE id = ?";
         final String deleteQuery = "DELETE FROM items WHERE id = ?";
-        final Item[] itemToDelete = new Item[1];
+        Item itemToDelete = null;
 
-        try (Connection connection = dataSource.getConnection()) {
-            executeInTransaction(connection, conn -> {
-                try (PreparedStatement selectStatement = conn.prepareStatement(selectQuery)) {
-                    selectStatement.setLong(1, itemId);
-                    try (ResultSet resultSet = selectStatement.executeQuery()) {
-                        if (resultSet.next()) {
-                            itemToDelete[0] = mapResultSetToItem(resultSet);
-                        } else {
-                            throw new SQLException("Объект с id=" + itemId + " не найден.");
-                        }
-                    }
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement selectStatement = connection.prepareStatement(selectQuery);
+             PreparedStatement deleteStatement = connection.prepareStatement(deleteQuery)) {
+            selectStatement.setLong(1, itemId);
+            try (ResultSet resultSet = selectStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    itemToDelete = mapResultSetToItem(resultSet);
                 }
+            }
 
-                try (PreparedStatement deleteStatement = conn.prepareStatement(deleteQuery)) {
-                    deleteStatement.setLong(1, itemId);
-                    deleteStatement.executeUpdate();
-                }
-            });
+            deleteStatement.setLong(1, itemId);
+            deleteStatement.executeUpdate();
         } catch (SQLException e) {
             logger.error("Ошибка удаления элемента с id={}: {}", itemId, e.getMessage(), e);
         }
 
-        return Optional.ofNullable(itemToDelete[0]);
+        return Optional.ofNullable(itemToDelete);
     }
 
     public void deleteAll() {
@@ -176,23 +162,5 @@ public class ItemsDao implements Repository {
         if (item.getPrice() <= 0) {
             throw new IllegalArgumentException("Цена должна быть больше 0");
         }
-    }
-
-    private void executeInTransaction(Connection connection, ThrowingConsumer<Connection> operation) throws SQLException {
-        try {
-            connection.setAutoCommit(false);
-            operation.accept(connection);
-            connection.commit();
-        } catch (Exception e) {
-            connection.rollback();
-            throw e;
-        } finally {
-            connection.setAutoCommit(true);
-        }
-    }
-
-    @FunctionalInterface
-    public interface ThrowingConsumer<T> {
-        void accept(T t) throws SQLException;
     }
 }
