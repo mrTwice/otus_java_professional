@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
 
-  users:
+  items:
     image: postgres:latest
     restart: unless-stopped
     environment:
@@ -12,7 +12,7 @@ services:
       PGDATA: ${PGDATA}
     volumes:
       - database:/var/lib/postgresql/data
-      #- ./tables.sql:/docker-entrypoint-initdb.d/tables.sql
+      - ./tables.sql:/docker-entrypoint-initdb.d/tables.sql
     ports:
       - "5432:5432"
 volumes:

@@ -1,16 +1,16 @@
 package ru.otus.java.professional.yampolskiy.patterns.two;
 
 public class Item {
-    private long id;
-    private String Tittle;
+    private Long id;
+    private String tittle;
     private double price;
 
     public Item() {
     }
 
-    public Item(long id, String tittle, double price) {
+    public Item(Long id, String tittle, double price) {
         this.id = id;
-        Tittle = tittle;
+        this.tittle = tittle;
         this.price = price;
     }
 
@@ -18,16 +18,16 @@ public class Item {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
     public String getTittle() {
-        return Tittle;
+        return tittle;
     }
 
     public void setTittle(String tittle) {
-        Tittle = tittle;
+        this.tittle = tittle;
     }
 
     public double getPrice() {
