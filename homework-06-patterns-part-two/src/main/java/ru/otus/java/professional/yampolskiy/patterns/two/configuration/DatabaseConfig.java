@@ -1,4 +1,4 @@
-package ru.otus.java.professional.yampolskiy.patterns.two;
+package ru.otus.java.professional.yampolskiy.patterns.two.configuration;
 
 import java.io.IOException;
 import java.util.Properties;

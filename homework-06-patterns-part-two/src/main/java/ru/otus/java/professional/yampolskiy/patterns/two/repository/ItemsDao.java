@@ -1,7 +1,9 @@
-package ru.otus.java.professional.yampolskiy.patterns.two;
+package ru.otus.java.professional.yampolskiy.patterns.two.repository;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.professional.yampolskiy.patterns.two.configuration.DataSource;
+import ru.otus.java.professional.yampolskiy.patterns.two.model.Item;
 
 import java.sql.*;
 import java.util.ArrayList;

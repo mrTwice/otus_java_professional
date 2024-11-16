@@ -1,4 +1,6 @@
-package ru.otus.java.professional.yampolskiy.patterns.two;
+package ru.otus.java.professional.yampolskiy.patterns.two.repository;
+
+import ru.otus.java.professional.yampolskiy.patterns.two.model.Item;
 
 import java.util.List;
 import java.util.Optional;

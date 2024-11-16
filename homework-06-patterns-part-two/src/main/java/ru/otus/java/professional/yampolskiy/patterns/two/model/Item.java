@@ -1,4 +1,4 @@
-package ru.otus.java.professional.yampolskiy.patterns.two;
+package ru.otus.java.professional.yampolskiy.patterns.two.model;
 
 public class Item {
     private Long id;

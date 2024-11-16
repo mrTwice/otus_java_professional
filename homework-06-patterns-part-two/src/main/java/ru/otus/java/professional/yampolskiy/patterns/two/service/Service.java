@@ -1,4 +1,4 @@
-package ru.otus.java.professional.yampolskiy.patterns.two;
+package ru.otus.java.professional.yampolskiy.patterns.two.service;
 
 public interface Service {
     void fillData();
