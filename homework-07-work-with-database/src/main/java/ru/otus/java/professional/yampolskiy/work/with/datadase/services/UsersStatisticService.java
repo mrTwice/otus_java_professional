@@ -1,4 +1,7 @@
-package ru.otus.java.professional.yampolskiy.work.with.datadase;
+package ru.otus.java.professional.yampolskiy.work.with.datadase.services;
+
+import ru.otus.java.professional.yampolskiy.work.with.datadase.entities.User;
+import ru.otus.java.professional.yampolskiy.work.with.datadase.repositories.UsersDao;
 
 public class UsersStatisticService {
     private UsersDao usersDao;

@@ -1,4 +1,8 @@
-package ru.otus.java.professional.yampolskiy.work.with.datadase;
+package ru.otus.java.professional.yampolskiy.work.with.datadase.entities;
+
+import ru.otus.java.professional.yampolskiy.work.with.datadase.annotations.RepositoryField;
+import ru.otus.java.professional.yampolskiy.work.with.datadase.annotations.RepositoryIdField;
+import ru.otus.java.professional.yampolskiy.work.with.datadase.annotations.RepositoryTable;
 
 @RepositoryTable(title = "users")
 public class User {

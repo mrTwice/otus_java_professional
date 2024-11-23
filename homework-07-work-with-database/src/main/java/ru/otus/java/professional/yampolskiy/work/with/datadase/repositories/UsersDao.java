@@ -1,4 +1,7 @@
-package ru.otus.java.professional.yampolskiy.work.with.datadase;
+package ru.otus.java.professional.yampolskiy.work.with.datadase.repositories;
+
+import ru.otus.java.professional.yampolskiy.work.with.datadase.configurations.DataSource;
+import ru.otus.java.professional.yampolskiy.work.with.datadase.entities.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

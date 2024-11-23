@@ -1,4 +1,4 @@
-package ru.otus.java.professional.yampolskiy.work.with.datadase;
+package ru.otus.java.professional.yampolskiy.work.with.datadase.configurations;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

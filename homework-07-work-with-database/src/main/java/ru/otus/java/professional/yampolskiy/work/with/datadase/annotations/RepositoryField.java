@@ -1,4 +1,4 @@
-package ru.otus.java.professional.yampolskiy.work.with.datadase;
+package ru.otus.java.professional.yampolskiy.work.with.datadase.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

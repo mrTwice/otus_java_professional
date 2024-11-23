@@ -1,4 +1,10 @@
-package ru.otus.java.professional.yampolskiy.work.with.datadase;
+package ru.otus.java.professional.yampolskiy.work.with.datadase.repositories;
+
+import ru.otus.java.professional.yampolskiy.work.with.datadase.configurations.DataSource;
+import ru.otus.java.professional.yampolskiy.work.with.datadase.annotations.RepositoryField;
+import ru.otus.java.professional.yampolskiy.work.with.datadase.annotations.RepositoryIdField;
+import ru.otus.java.professional.yampolskiy.work.with.datadase.annotations.RepositoryTable;
+import ru.otus.java.professional.yampolskiy.work.with.datadase.exceptions.ORMException;
 
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;

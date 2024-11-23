@@ -1,5 +1,10 @@
 package ru.otus.java.professional.yampolskiy.work.with.datadase;
 
+import ru.otus.java.professional.yampolskiy.work.with.datadase.configurations.DataSource;
+import ru.otus.java.professional.yampolskiy.work.with.datadase.entities.User;
+import ru.otus.java.professional.yampolskiy.work.with.datadase.repositories.AbstractRepository;
+import ru.otus.java.professional.yampolskiy.work.with.datadase.repositories.UsersDao;
+
 import java.sql.SQLException;
 
 public class MockChatServer {
