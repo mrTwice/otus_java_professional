@@ -41,7 +41,7 @@ public final class DataSource implements AutoCloseable {
         return INSTANCE;
     }
 
-    public synchronized Connection getConnection() throws SQLException {
+    public Connection getConnection() throws SQLException {
         return hikariDataSource.getConnection();
     }
 
