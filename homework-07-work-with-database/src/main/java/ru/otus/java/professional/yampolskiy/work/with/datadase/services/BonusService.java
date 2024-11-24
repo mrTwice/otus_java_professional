@@ -12,7 +12,7 @@ public class BonusService {
     }
 
     public void init() throws SQLException {
-        dataSource.getStatement().executeUpdate(
+        dataSource.getConnection().createStatement().executeUpdate(
                 "" +
                         "create table if not exists bonuses (" +
                         "    id          bigserial primary key," +
