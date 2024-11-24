@@ -7,65 +7,139 @@ import ru.otus.java.professional.yampolskiy.work.with.datadase.annotations.Repos
 import ru.otus.java.professional.yampolskiy.work.with.datadase.exceptions.ORMException;
 
 import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AbstractRepository<T> {
-    private DataSource dataSource;
-    private PreparedStatement psInsert;
+    private final DataSource dataSource;
+    private final Map<String, String> sqlQueries = new HashMap<>();
+    private Class<T> cls;
+    private String tableName;
     private List<Field> cachedFields;
 
     public AbstractRepository(DataSource dataSource, Class<T> cls) {
+        validate(cls);
         this.dataSource = dataSource;
         this.prepareInsert(cls);
     }
 
     public void save(T entity) {
-        try {
+        String insert = sqlQueries.get("insert");
+        if (insert == null) {
+            throw new ORMException("SQL-запрос для вставки не найден");
+        }
+
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement ps = connection.prepareStatement(insert)) {
+
             for (int i = 0; i < cachedFields.size(); i++) {
-                psInsert.setObject(i + 1, cachedFields.get(i).get(entity));
+                ps.setObject(i + 1, cachedFields.get(i).get(entity));
             }
-            psInsert.executeUpdate();
+            ps.executeUpdate();
         } catch (Exception e) {
-            throw new ORMException("Что-то пошло не так при сохранении: " + entity);
+            throw new ORMException("Ошибка при сохранении объекта: " + entity);
         }
     }
 
-    private void prepareInsert(Class cls) {
-        if (!cls.isAnnotationPresent(RepositoryTable.class)) {
-            throw new ORMException("Класс не предназначен для создания репозитория, не хватает аннотации @RepositoryTable");
+    public List<T> findAll() {
+        List<T> tEntities = new ArrayList<>();
+        String findAll = sqlQueries.get("findAll");
+        if (findAll == null) {
+            throw new ORMException("SQL-запрос для получения списка не найден");
         }
-        String tableName = ((RepositoryTable) cls.getAnnotation(RepositoryTable.class)).title();
-        StringBuilder query = new StringBuilder("insert into ");
-        query.append(tableName).append(" (");
-        // 'insert into users ('
-        cachedFields = Arrays.stream(cls.getDeclaredFields())
-                .filter(f -> f.isAnnotationPresent(RepositoryField.class))
-                .filter(f -> !f.isAnnotationPresent(RepositoryIdField.class))
-                .collect(Collectors.toList());
-        for (Field f : cachedFields) { // TODO заменить на использование геттеров
-            f.setAccessible(true);
+
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(findAll)) {
+
+            while (resultSet.next()) {
+                T entity = createEntityFromResultSet(resultSet);
+                tEntities.add(entity);
+            }
+
+        } catch (Exception e) {
+            throw new ORMException("Ошибка получения списка объектов.");
         }
-        for (Field f : cachedFields) {
-            query.append(f.getName()).append(", ");
-        }
-        // 'insert into users (login, password, nickname, '
-        query.setLength(query.length() - 2);
-        query.append(") values (");
-        // 'insert into users (login, password, nickname) values ('
-        for (Field f : cachedFields) {
-            query.append("?, ");
-        }
-        query.setLength(query.length() - 2);
-        query.append(");");
-        // 'insert into users (login, password, nickname) values (?, ?, ?);'
+        return tEntities;
+    }
+
+
+    public T findById(long id) {
+        return null;
+    }
+
+    public void update(T entity) {
+
+    }
+
+    public void deleteById(Long id) {
+
+    }
+
+    private void prepareFindAll(Class<T> cls){
+        String tableName = cls.getAnnotation(RepositoryTable.class).title();
+        String sql = String.format("SELECT * FROM %s);", tableName);
+        sqlQueries.put("findAll", sql);
+    }
+
+    private void prepareInsert(Class<T> cls) {
+        String columnNames = cachedFields.stream()
+                .map(f -> {
+                    RepositoryField annotation = f.getAnnotation(RepositoryField.class);
+                    return (annotation != null && !annotation.columnName().isEmpty())
+                            ? annotation.columnName()
+                            : f.getName();
+                })
+                .collect(Collectors.joining(", "));
+
+
+        String placeholders = cachedFields.stream()
+                .map(f -> "?")
+                .collect(Collectors.joining(", "));
+
+        String sql = String.format("INSERT INTO %s (%s) VALUES (%s);", tableName, columnNames, placeholders);
+        sqlQueries.put("insert", sql);
+    }
+
+    private T createEntityFromResultSet(ResultSet resultSet) {
         try {
-            psInsert = dataSource.getConnection().prepareStatement(query.toString());
-        } catch (SQLException e) {
-            throw new ORMException("Не удалось проинициализировать репозиторий для класса " + cls.getName());
+            T entity = cls.getDeclaredConstructor().newInstance();
+            for (Field field : cachedFields) {
+                RepositoryField annotation = field.getAnnotation(RepositoryField.class);
+                String columnName = (annotation != null && !annotation.columnName().isEmpty())
+                        ? annotation.columnName()
+                        : field.getName();
+
+                Object value = resultSet.getObject(columnName);
+                field.set(entity, value);
+            }
+            return entity;
+        } catch (Exception e) {
+            throw new ORMException("Ошибка создания объекта из ResultSet");
         }
     }
+
+
+    private void validate(Class<T> cls) {
+        if (!cls.isAnnotationPresent(RepositoryTable.class)) {
+            throw new ORMException("Класс не предназначен для создания репозитория, отсутствует аннотация @RepositoryTable");
+        }
+        this.cls = cls;
+        this.tableName = cls.getAnnotation(RepositoryTable.class).title();
+
+        this.cachedFields = Arrays.stream(cls.getDeclaredFields())
+                .filter(this::isRepositoryField)
+                .peek(f -> f.setAccessible(true))
+                .collect(Collectors.toList());
+    }
+
+    private boolean isRepositoryField(Field field) {
+        return field.isAnnotationPresent(RepositoryField.class) &&
+                !field.isAnnotationPresent(RepositoryIdField.class);
+    }
 }
+

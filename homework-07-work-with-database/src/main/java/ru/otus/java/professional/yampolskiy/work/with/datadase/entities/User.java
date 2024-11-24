@@ -8,11 +8,11 @@ import ru.otus.java.professional.yampolskiy.work.with.datadase.annotations.Repos
 public class User {
     @RepositoryIdField
     private Long id;
-    @RepositoryField
+    @RepositoryField(columnName = "user_login")
     private String login;
-    @RepositoryField
+    @RepositoryField(columnName = "user_password")
     private String password;
-    @RepositoryField
+    @RepositoryField(columnName = "user_nickname")
     private String nickname;
 
     public Long getId() {

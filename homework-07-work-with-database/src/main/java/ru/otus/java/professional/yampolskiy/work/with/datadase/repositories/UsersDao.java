@@ -20,21 +20,16 @@ public class UsersDao {
         this.dataSource = dataSource;
     }
 
-//    public void init() throws SQLException {
-//        dataSource.getConnection().createStatement().executeUpdate(
-//                "" +
-//                        "create table if not exists users (" +
-//                        "    id          bigserial primary key," +
-//                        "    login       varchar(255)," +
-//                        "    password    varchar(255)," +
-//                        "    nickname    varchar(255)" +
-//                        ")"
-//        );
-//    }
-
     public Optional<User> getUserByLoginAndPassword(String login, String password) {
-        try (ResultSet rs = dataSource.getConnection().createStatement().executeQuery("select * from users where login = '" + login + "' AND password = '" + password + "'")) {
-            return Optional.of(new User(rs.getLong("id"), rs.getString("login"), rs.getString("password"), rs.getString("nickname")));
+        try (ResultSet rs = dataSource.getConnection().createStatement().executeQuery("select * from users where user_login = '" + login + "' AND password = '" + password + "'")) {
+            return Optional.of(
+                    new User(
+                            rs.getLong("id"),
+                            rs.getString("login"),
+                            rs.getString("password"),
+                            rs.getString("nickname")
+                    )
+            );
         } catch (SQLException e) {
             logger.error("Ошибка получения пользователя по логину", e);
         }
@@ -44,7 +39,14 @@ public class UsersDao {
     public Optional<User> getUserById(Long id) {
         try (ResultSet rs = dataSource.getConnection().createStatement().executeQuery("select * from users where id = " + id)) {
             if (rs.next()) {
-                return Optional.of(new User(rs.getLong("id"), rs.getString("login"), rs.getString("password"), rs.getString("nickname")));
+                return Optional.of(
+                        new User(
+                                rs.getLong("id"),
+                                rs.getString("login"),
+                                rs.getString("password"),
+                                rs.getString("nickname")
+                        )
+                );
             }
         } catch (SQLException e) {
             logger.error("Ошибка получения пользователя по id", e);
@@ -57,7 +59,13 @@ public class UsersDao {
         List<User> result = new ArrayList<>();
         try (ResultSet rs = dataSource.getConnection().createStatement().executeQuery("select * from users")) {
             while (rs.next()) {
-                result.add(new User(rs.getLong("id"), rs.getString("login"), rs.getString("password"), rs.getString("nickname")));
+                result.add(
+                        new User(
+                                rs.getLong("id"),
+                                rs.getString("user_login"),
+                                rs.getString("user_password"),
+                                rs.getString("user_nickname"))
+                );
             }
         } catch (SQLException e) {
             logger.error("Ошибка получения списка пользователей", e);
@@ -67,13 +75,29 @@ public class UsersDao {
     }
 
     public void save(User user) throws SQLException {
-        dataSource.getConnection().createStatement().executeUpdate(String.format("insert into users (login, password, nickname) values ('%s', '%s', '%s');", user.getLogin(), user.getPassword(), user.getNickname()));
+        dataSource.getConnection()
+                .createStatement()
+                .executeUpdate(
+                        String.format(
+                                "insert into users (user_login, user_password, user_nickname) values ('%s', '%s', '%s');",
+                                user.getLogin(),
+                                user.getPassword(),
+                                user.getNickname())
+                );
     }
 
     public void saveAll(List<User> users) throws SQLException {
         dataSource.getConnection().setAutoCommit(false);
         for (User u : users) {
-            dataSource.getConnection().createStatement().executeUpdate(String.format("insert into users (login, password, nickname) values ('%s', '%s', '%s');", u.getLogin(), u.getPassword(), u.getNickname()));
+            dataSource.getConnection()
+                    .createStatement()
+                    .executeUpdate(
+                            String.format(
+                                    "insert into users (user_login, user_password, user_nickname) values ('%s', '%s', '%s');",
+                                    u.getLogin(),
+                                    u.getPassword(),
+                                    u.getNickname())
+                    );
         }
         dataSource.getConnection().setAutoCommit(true);
     }
