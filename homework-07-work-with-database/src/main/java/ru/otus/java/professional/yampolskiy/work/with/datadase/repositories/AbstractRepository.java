@@ -10,275 +10,179 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class AbstractRepository<T> {
     private final DataSource dataSource;
     private final Map<String, String> sqlQueries = new HashMap<>();
-    private Class<T> cls;
-    private String tableName;
-    private Field idField;
-    private List<Field> cachedFields;
+    private final Class<T> cls;
+    private final String tableName;
+    private final Field idField;
+    private final List<Field> cachedFields;
 
     public AbstractRepository(DataSource dataSource, Class<T> cls) {
         validate(cls);
         this.dataSource = dataSource;
-        this.prepareInsert();
-        this.prepareFindAll();
-        this.prepareFindById();
-        this.prepareUpdate();
-        this.prepareDeleteById();
+        this.cls = cls;
+        this.tableName = cls.getAnnotation(RepositoryTable.class).title();
+        this.idField = getIdField(cls);
+        this.cachedFields = getRepositoryFields(cls);
     }
 
     public void save(T entity) {
-        String insert = sqlQueries.get("insert");
-        if (insert == null) {
-            throw new ORMException("SQL-запрос для вставки не найден");
-        }
-
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement ps = connection.prepareStatement(insert)) {
-
+        String insertQuery = getOrPrepareQuery("insert", this::generateInsertQuery);
+        executeUpdate(insertQuery, ps -> {
             for (int i = 0; i < cachedFields.size(); i++) {
                 ps.setObject(i + 1, cachedFields.get(i).get(entity));
             }
-            ps.executeUpdate();
-        } catch (Exception e) {
-            throw new ORMException("Ошибка при сохранении объекта: " + entity);
-        }
+        });
     }
 
     public List<T> findAll() {
-        List<T> tEntities = new ArrayList<>();
-        String findAll = sqlQueries.get("findAll");
-        if (findAll == null) {
-            throw new ORMException("SQL-запрос для получения списка не найден");
-        }
-
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(findAll)) {
-
-            while (resultSet.next()) {
-                T entity = createEntityFromResultSet(resultSet);
-                tEntities.add(entity);
-            }
-
-        } catch (Exception e) {
-            throw new ORMException("Ошибка получения списка объектов.");
-        }
-        return tEntities;
+        String findAllQuery = getOrPrepareQuery("findAll", this::generateFindAllQuery);
+        return executeQuery(findAllQuery, ps -> {}, this::createEntityFromResultSet);
     }
 
-
     public T findById(long id) {
-        String findById = sqlQueries.get("findById");
-        if (findById == null) {
-            throw new ORMException("SQL-запрос для поиска по ID не найден");
-        }
-
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement ps = connection.prepareStatement(findById)) {
-
-            ps.setLong(1, id);
-            try (ResultSet resultSet = ps.executeQuery()) {
-                if (resultSet.next()) {
-                    return createEntityFromResultSet(resultSet);
-                } else {
-                    return null;
-                }
-            }
-
-        } catch (Exception e) {
-            throw new ORMException("Ошибка поиска объекта по ID: " + id);
-        }
+        String findByIdQuery = getOrPrepareQuery("findById", this::generateFindByIdQuery);
+        return executeQuery(findByIdQuery, ps -> ps.setLong(1, id), this::createEntityFromResultSet).stream()
+                .findFirst()
+                .orElse(null);
     }
 
     public void update(T entity) {
-        String updateQuery = sqlQueries.get("update");
-        if (updateQuery == null) {
-            throw new ORMException("SQL-запрос для обновления не найден");
-        }
-
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement ps = connection.prepareStatement(updateQuery)) {
-
+        String updateQuery = getOrPrepareQuery("update", this::generateUpdateQuery);
+        executeUpdate(updateQuery, ps -> {
             for (int i = 0; i < cachedFields.size(); i++) {
-                Field field = cachedFields.get(i);
-                field.setAccessible(true);
-                ps.setObject(i + 1, field.get(entity));
+                ps.setObject(i + 1, cachedFields.get(i).get(entity));
             }
-
-            Field idField = Arrays.stream(entity.getClass().getDeclaredFields())
-                    .filter(f -> f.isAnnotationPresent(RepositoryIdField.class))
-                    .findFirst()
-                    .orElseThrow(() -> new ORMException("Не найдено поле с аннотацией @RepositoryIdField"));
-            idField.setAccessible(true);
             ps.setObject(cachedFields.size() + 1, idField.get(entity));
-
-            ps.executeUpdate();
-
-        } catch (Exception e) {
-            throw new ORMException("Ошибка обновления объекта: " + entity);
-        }
+        });
     }
-
 
     public void deleteById(Long id) {
-        String deleteById = sqlQueries.get("deleteById");
-        if (deleteById == null) {
-            throw new ORMException("SQL-запрос для удаления по ID не найден");
-        }
+        String deleteQuery = getOrPrepareQuery("deleteById", this::generateDeleteQuery);
+        executeUpdate(deleteQuery, ps -> ps.setLong(1, id));
+    }
 
+
+    private String getOrPrepareQuery(String key, Supplier<String> queryGenerator) {
+        return sqlQueries.computeIfAbsent(key, k -> queryGenerator.get());
+    }
+
+    private void executeUpdate(String sql, SQLConsumer<PreparedStatement> preparer) {
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement ps = connection.prepareStatement(deleteById)) {
-
-            ps.setLong(1, id);
-            int affectedRows = ps.executeUpdate();
-            if (affectedRows == 0) {
-                throw new ORMException("Удаление не выполнено. Объект с ID " + id + " не найден.");
-            }
-
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            preparer.accept(ps);
+            ps.executeUpdate();
         } catch (Exception e) {
-            throw new ORMException("Ошибка удаления объекта с ID: " + id);
+            throw new ORMException("Ошибка выполнения запроса: " + sql, e);
         }
     }
 
-    private void prepareDeleteById() {
-        String idColumnName = idField.isAnnotationPresent(RepositoryField.class) &&
-                !idField.getAnnotation(RepositoryField.class).columnName().isEmpty()
-                ? idField.getAnnotation(RepositoryField.class).columnName()
-                : idField.getName();
-
-        String sql = String.format("DELETE FROM %s WHERE %s = ?", tableName, idColumnName);
-        sqlQueries.put("deleteById", sql);
-    }
-
-    private void prepareUpdate() {
-        String idColumnName = getIdColumnName();
-
-        String setClause = cachedFields.stream()
-                .map(f -> {
-                    RepositoryField annotation = f.getAnnotation(RepositoryField.class);
-                    String columnName = (annotation != null && !annotation.columnName().isEmpty())
-                            ? annotation.columnName()
-                            : f.getName();
-                    return columnName + " = ?";
-                })
-                .collect(Collectors.joining(", "));
-
-        String sql = String.format("UPDATE %s SET %s WHERE %s = ?;", tableName, setClause, idColumnName);
-
-        sqlQueries.put("update", sql);
-    }
-
-
-    private void prepareFindById() {
-        String idColumnName = getIdColumnName();
-
-        String sql = String.format("SELECT * FROM %s WHERE %s = ?", tableName, idColumnName);
-        sqlQueries.put("findById", sql);
-    }
-
-
-    private void prepareFindAll() {
-        String sql = String.format("SELECT * FROM %s;", tableName);
-        sqlQueries.put("findAll", sql);
-    }
-
-    private void prepareInsert() {
-        String columnNames = cachedFields.stream()
-                .map(f -> {
-                    RepositoryField annotation = f.getAnnotation(RepositoryField.class);
-                    return (annotation != null && !annotation.columnName().isEmpty())
-                            ? annotation.columnName()
-                            : f.getName();
-                })
-                .collect(Collectors.joining(", "));
-
-
-        String placeholders = cachedFields.stream()
-                .map(f -> "?")
-                .collect(Collectors.joining(", "));
-
-        String sql = String.format("INSERT INTO %s (%s) VALUES (%s);", tableName, columnNames, placeholders);
-        sqlQueries.put("insert", sql);
-    }
-
-    private T createEntityFromResultSet(ResultSet resultSet) {
-        try {
-            T entity = cls.getDeclaredConstructor().newInstance();
-
-            for (Field field : cachedFields) {
-                RepositoryField annotation = field.getAnnotation(RepositoryField.class);
-                String columnName = (annotation != null && !annotation.columnName().isEmpty())
-                        ? annotation.columnName()
-                        : field.getName();
-
-                Object value = resultSet.getObject(columnName);
-                if (value != null) {
-                    field.setAccessible(true);
-                    field.set(entity, value);
+    private <R> List<R> executeQuery(String sql, SQLConsumer<PreparedStatement> preparer, SQLFunction<ResultSet, R> mapper) {
+        List<R> results = new ArrayList<>();
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            preparer.accept(ps);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    results.add(mapper.apply(rs));
                 }
             }
-
-            if (idField != null) {
-                String idColumnName = idField.isAnnotationPresent(RepositoryField.class) &&
-                        !idField.getAnnotation(RepositoryField.class).columnName().isEmpty()
-                        ? idField.getAnnotation(RepositoryField.class).columnName()
-                        : idField.getName();
-
-                Object idValue = resultSet.getObject(idColumnName);
-                if (idValue != null) {
-                    idField.setAccessible(true);
-                    idField.set(entity, idValue);
-                }
-            }
-
-            return entity;
         } catch (Exception e) {
-            throw new ORMException("Ошибка создания объекта из ResultSet");
+            throw new ORMException("Ошибка выполнения запроса: " + sql, e);
         }
+        return results;
     }
 
-
-    private void validate(Class<T> cls) {
-        if (!cls.isAnnotationPresent(RepositoryTable.class)) {
-            throw new ORMException("Класс не предназначен для создания репозитория, отсутствует аннотация @RepositoryTable");
+    private T createEntityFromResultSet(ResultSet resultSet) throws Exception {
+        T entity = cls.getDeclaredConstructor().newInstance();
+        for (Field field : cachedFields) {
+            String columnName = getColumnName(field);
+            Object value = resultSet.getObject(columnName);
+            if (value != null) {
+                field.set(entity, value);
+            }
         }
-        this.cls = cls;
-        this.tableName = cls.getAnnotation(RepositoryTable.class).title();
+        if (idField != null) {
+            String idColumnName = getColumnName(idField);
+            Object idValue = resultSet.getObject(idColumnName);
+            if (idValue != null) {
+                idField.set(entity, idValue);
+            }
+        }
+        return entity;
+    }
 
-        this.idField = Arrays.stream(cls.getDeclaredFields())
+    private String getColumnName(Field field) {
+        RepositoryField annotation = field.getAnnotation(RepositoryField.class);
+        return (annotation != null && !annotation.columnName().isEmpty()) ? annotation.columnName() : field.getName();
+    }
+
+    private Field getIdField(Class<T> cls) {
+        return Arrays.stream(cls.getDeclaredFields())
                 .filter(f -> f.isAnnotationPresent(RepositoryIdField.class))
+                .peek(f -> f.setAccessible(true))
                 .findFirst()
                 .orElseThrow(() -> new ORMException("Не найдено поле с аннотацией @RepositoryIdField"));
-        this.idField.setAccessible(true);
+    }
 
-        this.cachedFields = Arrays.stream(cls.getDeclaredFields())
-                .filter(this::isRepositoryField)
+    private List<Field> getRepositoryFields(Class<T> cls) {
+        return Arrays.stream(cls.getDeclaredFields())
+                .filter(f -> f.isAnnotationPresent(RepositoryField.class) &&
+                        !f.isAnnotationPresent(RepositoryIdField.class))
                 .peek(f -> f.setAccessible(true))
                 .collect(Collectors.toList());
     }
 
-    private boolean isRepositoryField(Field field) {
-        return field.isAnnotationPresent(RepositoryField.class) &&
-                !field.isAnnotationPresent(RepositoryIdField.class);
+    private void validate(Class<T> cls) {
+        if (!cls.isAnnotationPresent(RepositoryTable.class)) {
+            throw new ORMException("Класс должен быть аннотирован @RepositoryTable");
+        }
     }
 
-    private String getIdColumnName() {
-        Field idField = Arrays.stream(cls.getDeclaredFields())
-                .filter(f -> f.isAnnotationPresent(RepositoryIdField.class))
-                .findFirst()
-                .orElseThrow(() -> new ORMException("Не найдено поле с аннотацией @RepositoryIdField"));
-
-        return idField.isAnnotationPresent(RepositoryField.class) &&
-                !idField.getAnnotation(RepositoryField.class).columnName().isEmpty()
-                ? idField.getAnnotation(RepositoryField.class).columnName()
-                : idField.getName();
+    private String generateInsertQuery() {
+        String columns = cachedFields.stream()
+                .map(this::getColumnName)
+                .collect(Collectors.joining(", "));
+        String placeholders = cachedFields.stream()
+                .map(f -> "?")
+                .collect(Collectors.joining(", "));
+        return String.format("INSERT INTO %s (%s) VALUES (%s);", tableName, columns, placeholders);
     }
 
+    private String generateFindAllQuery() {
+        return String.format("SELECT * FROM %s;", tableName);
+    }
+
+    private String generateFindByIdQuery() {
+        String idColumn = getColumnName(idField);
+        return String.format("SELECT * FROM %s WHERE %s = ?;", tableName, idColumn);
+    }
+
+    private String generateUpdateQuery() {
+        String setClause = cachedFields.stream()
+                .map(f -> getColumnName(f) + " = ?")
+                .collect(Collectors.joining(", "));
+        String idColumn = getColumnName(idField);
+        return String.format("UPDATE %s SET %s WHERE %s = ?;", tableName, setClause, idColumn);
+    }
+
+    private String generateDeleteQuery() {
+        String idColumn = getColumnName(idField);
+        return String.format("DELETE FROM %s WHERE %s = ?;", tableName, idColumn);
+    }
+
+    @FunctionalInterface
+    private interface SQLConsumer<T> {
+        void accept(T t) throws Exception;
+    }
+
+    @FunctionalInterface
+    private interface SQLFunction<T, R> {
+        R apply(T t) throws Exception;
+    }
 }
-
