@@ -1,4 +1,4 @@
-package ru.otus.java.professional.yampolskiy.javaee;
+package ru.otus.java.professional.yampolskiy.javaee.lesson;
 
 
 import jakarta.servlet.ServletException;
