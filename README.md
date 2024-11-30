@@ -9,3 +9,6 @@
 * ### [Домашнее задание №5: Patterns Part One](homework-05-patterns-part-one/README.md)
 * ### [Домашнее задание №6: Patterns Part Two](homework-06-patterns-part-two/README.md)
 * ### [Домашнее задание №7: Work with Database](homework-07-work-with-database/README.md)
+
+
+* ### [Домашнее задание №10: Spring Context](homework-10-spring-context/README.md)
