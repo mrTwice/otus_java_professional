@@ -145,13 +145,15 @@ public class AbstractRepository<T> {
     }
 
     private String generateInsertQuery() {
-        String columns = cachedFields.stream()
+        String columns = getColumnNames(cachedFields);
+        String placeholders = "?".repeat(cachedFields.size()).replace("", ", ").trim();
+        return "INSERT INTO %s (%s) VALUES (%s);".formatted(tableName, columns, placeholders);
+    }
+
+    private String getColumnNames(List<Field> fields) {
+        return fields.stream()
                 .map(this::getColumnName)
                 .collect(Collectors.joining(", "));
-        String placeholders = cachedFields.stream()
-                .map(f -> "?")
-                .collect(Collectors.joining(", "));
-        return String.format("INSERT INTO %s (%s) VALUES (%s);", tableName, columns, placeholders);
     }
 
     private String generateFindAllQuery() {
