@@ -18,6 +18,14 @@
           </set>
         </option>
       </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/homework-10-spring-context" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/homework-10-spring-context" />
+          </set>
+        </option>
+      </GradleProjectSettings>
     </option>
   </component>
 </project>
