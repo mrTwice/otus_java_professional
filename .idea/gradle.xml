@@ -16,6 +16,8 @@
             <option value="$PROJECT_DIR$/homework-06-patterns-part-two" />
             <option value="$PROJECT_DIR$/homework-07-work-with-database" />
             <option value="$PROJECT_DIR$/homework-09-javaee-web-server" />
+            <option value="$PROJECT_DIR$/homework-10-spring-context" />
+            <option value="$PROJECT_DIR$/homework-11-spring-boot-part-one" />
           </set>
         </option>
       </GradleProjectSettings>
