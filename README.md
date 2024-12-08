@@ -13,3 +13,4 @@
 
 * ### [Домашнее задание №10: Spring Context](homework-10-spring-context/README.md)
 * ### [Домашнее задание №11: Spring Boot Part One](homework-11-spring-boot-part-one/README.md)
+* ### [Домашнее задание №12: JPA/Hibernate](homework-12-jpa-hibernate-part-two/README.md)

@@ -6,4 +6,5 @@ include 'homework-04-multithreading'
 include 'homework-05-patterns-part-one'
 include 'homework-06-patterns-part-two'
 include 'homework-07-work-with-database'
+include 'homework-12-jpa-hibernate-part-two'
 
