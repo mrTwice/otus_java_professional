@@ -1,0 +1,29 @@
+<hibernate-configuration>
+    <session-factory>
+        <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/Homework12</property>
+        <property name="hibernate.connection.username">User</property>
+        <property name="hibernate.connection.password">Password</property>
+
+        <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.format_sql">false</property>
+
+        <property name="hibernate.hbm2ddl.auto">validate</property>
+
+        <property name="hibernate.c3p0.min_size">5</property>
+        <property name="hibernate.c3p0.max_size">20</property>
+        <property name="hibernate.c3p0.timeout">300</property>
+        <property name="hibernate.c3p0.max_statements">50</property>
+        <property name="hibernate.c3p0.idle_test_period">3000</property>
+
+<!--        <mapping package="ru.otus.java.professional.yampolskiy.hibernate.entities" />-->
+
+        <mapping class="ru.otus.java.professional.yampolskiy.hibernate.entities.Client"/>
+        <mapping class="ru.otus.java.professional.yampolskiy.hibernate.entities.Order"/>
+        <mapping class="ru.otus.java.professional.yampolskiy.hibernate.entities.Product"/>
+        <mapping class="ru.otus.java.professional.yampolskiy.hibernate.entities.OrderItem"/>
+        <mapping class="ru.otus.java.professional.yampolskiy.hibernate.entities.PriceHistory"/>
+    </session-factory>
+</hibernate-configuration>
+
