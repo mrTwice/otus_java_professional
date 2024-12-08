@@ -1,4 +1,4 @@
-package ru.otus.java.professional.yampolskiy.hibernate.services;
+package ru.otus.java.professional.yampolskiy.hibernate.services.interfaces;
 
 import java.util.List;
 

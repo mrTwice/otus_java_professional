@@ -25,6 +25,8 @@ public class PriceHistory {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
     private BigDecimal price;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Override

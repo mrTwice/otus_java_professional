@@ -28,6 +28,7 @@ public class OrderItem {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
     private Integer quantity;
+    @Column(name = "price_at_ordering")
     private BigDecimal priceAtOrdering;
 
     @Override

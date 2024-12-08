@@ -7,7 +7,7 @@
 
         <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
         <property name="hibernate.show_sql">true</property>
-        <property name="hibernate.format_sql">true</property>
+        <property name="hibernate.format_sql">false</property>
 
         <property name="hibernate.hbm2ddl.auto">validate</property>
 
@@ -16,6 +16,14 @@
         <property name="hibernate.c3p0.timeout">300</property>
         <property name="hibernate.c3p0.max_statements">50</property>
         <property name="hibernate.c3p0.idle_test_period">3000</property>
+
+<!--        <mapping package="ru.otus.java.professional.yampolskiy.hibernate.entities" />-->
+
+        <mapping class="ru.otus.java.professional.yampolskiy.hibernate.entities.Client"/>
+        <mapping class="ru.otus.java.professional.yampolskiy.hibernate.entities.Order"/>
+        <mapping class="ru.otus.java.professional.yampolskiy.hibernate.entities.Product"/>
+        <mapping class="ru.otus.java.professional.yampolskiy.hibernate.entities.OrderItem"/>
+        <mapping class="ru.otus.java.professional.yampolskiy.hibernate.entities.PriceHistory"/>
     </session-factory>
 </hibernate-configuration>
 

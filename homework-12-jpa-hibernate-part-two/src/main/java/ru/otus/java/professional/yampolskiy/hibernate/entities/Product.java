@@ -1,5 +1,6 @@
 package ru.otus.java.professional.yampolskiy.hibernate.entities;
 
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,6 +10,8 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
+
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "products")
@@ -21,6 +24,8 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String title;
+
+    @Column(name = "current_price")
     private BigDecimal currentPrice;
 
     @OneToMany(mappedBy = "product")
@@ -35,8 +40,6 @@ public class Product {
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", currentPrice=" + currentPrice +
-                ", priceHistories=" + priceHistories +
-                ", orderItems=" + orderItems +
                 '}';
     }
 

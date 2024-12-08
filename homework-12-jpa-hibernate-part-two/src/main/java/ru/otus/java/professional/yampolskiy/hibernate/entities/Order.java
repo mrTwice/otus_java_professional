@@ -25,6 +25,8 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
+
+    @Column(name = "order_date")
     private LocalDate orderDate;
 
     @OneToMany(mappedBy = "order")
@@ -35,8 +37,6 @@ public class Order {
         return "Order{" +
                 "id=" + id +
                 ", client=" + client +
-                ", orderDate=" + orderDate +
-                ", orderItems=" + orderItems +
                 '}';
     }
 

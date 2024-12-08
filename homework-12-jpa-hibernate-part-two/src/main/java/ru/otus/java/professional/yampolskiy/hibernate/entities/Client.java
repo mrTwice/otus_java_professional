@@ -29,7 +29,6 @@ public class Client {
         return "Client{" +
                 "id=" + id +
                 ", login='" + login + '\'' +
-                ", orders=" + orders +
                 '}';
     }
 

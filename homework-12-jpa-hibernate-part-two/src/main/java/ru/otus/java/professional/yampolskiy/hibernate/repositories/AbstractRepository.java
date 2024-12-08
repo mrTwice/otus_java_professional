@@ -6,6 +6,8 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
+import ru.otus.java.professional.yampolskiy.hibernate.repositories.interfaces.Repository;
 
 import java.util.List;
 
@@ -86,14 +88,18 @@ public abstract class AbstractRepository<T, ID> implements Repository<T, ID> {
         }
     }
 
-    private void rollbackTransaction(Transaction transaction) {
-        if (transaction != null) {
+    void rollbackTransaction(Transaction transaction) {
+        if (transaction != null && transaction.getStatus() != TransactionStatus.COMMITTED) {
             try {
-                transaction.rollback();
+                if (transaction.getStatus() != TransactionStatus.ROLLED_BACK) {
+                    transaction.rollback();
+                }
             } catch (Exception e) {
                 logger.error("Ошибка при откате транзакции: ", e);
                 System.err.println("Ошибка при откате транзакции: " + e.getMessage());
             }
+        } else {
+            logger.warn("Транзакция уже завершена или откатана.");
         }
     }
 }
