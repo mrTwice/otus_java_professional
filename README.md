@@ -10,6 +10,7 @@
 * ### [Домашнее задание №6: Patterns Part Two](homework-06-patterns-part-two/README.md)
 * ### [Домашнее задание №7: Work with Database](homework-07-work-with-database/README.md)
 
-
+* ### [Домашнее задание №9: JavaEE Servlets](homework-09-javaee-web-server/README.md)
 * ### [Домашнее задание №10: Spring Context](homework-10-spring-context/README.md)
 * ### [Домашнее задание №11: Spring Boot Part One](homework-11-spring-boot-part-one/README.md)
+
