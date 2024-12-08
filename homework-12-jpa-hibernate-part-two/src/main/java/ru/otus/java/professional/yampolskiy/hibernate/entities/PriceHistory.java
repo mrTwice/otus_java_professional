@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "price_history")
@@ -25,4 +26,26 @@ public class PriceHistory {
     private Product product;
     private BigDecimal price;
     private LocalDateTime createdAt;
+
+    @Override
+    public String toString() {
+        return "PriceHistory{" +
+                "id=" + id +
+                ", product=" + product +
+                ", price=" + price +
+                ", createdAt=" + createdAt +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        PriceHistory that = (PriceHistory) o;
+        return Objects.equals(id, that.id) && Objects.equals(product, that.product) && Objects.equals(price, that.price) && Objects.equals(createdAt, that.createdAt);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, product, price, createdAt);
+    }
 }

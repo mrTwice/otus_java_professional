@@ -1,6 +1,8 @@
 package ru.otus.java.professional.yampolskiy.hibernate.repositories;
 
 import lombok.AllArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -8,7 +10,8 @@ import org.hibernate.Transaction;
 import java.util.List;
 
 @AllArgsConstructor
-public class AbstractRepository<T, ID> implements Repository<T, ID> {
+public abstract class AbstractRepository<T, ID> implements Repository<T, ID> {
+    private final Logger logger = LogManager.getLogger(this.getClass());
     private final Class<T> entityClass;
     protected SessionFactory sessionFactory;
 
@@ -21,7 +24,7 @@ public class AbstractRepository<T, ID> implements Repository<T, ID> {
             transaction.commit();
             return entity;
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            rollbackTransaction(transaction);
             throw e;
         }
     }
@@ -48,7 +51,7 @@ public class AbstractRepository<T, ID> implements Repository<T, ID> {
             session.remove(entity);
             transaction.commit();
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            rollbackTransaction(transaction);
             throw e;
         }
     }
@@ -58,10 +61,13 @@ public class AbstractRepository<T, ID> implements Repository<T, ID> {
         Transaction transaction = null;
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
-            session.remove(findById(id));
+            T entity = session.get(entityClass, id);
+            if (entity != null) {
+                session.remove(entity);
+            }
             transaction.commit();
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            rollbackTransaction(transaction);
             throw e;
         }
     }
@@ -75,8 +81,19 @@ public class AbstractRepository<T, ID> implements Repository<T, ID> {
             transaction.commit();
             return t;
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            rollbackTransaction(transaction);
             throw e;
+        }
+    }
+
+    private void rollbackTransaction(Transaction transaction) {
+        if (transaction != null) {
+            try {
+                transaction.rollback();
+            } catch (Exception e) {
+                logger.error("Ошибка при откате транзакции: ", e);
+                System.err.println("Ошибка при откате транзакции: " + e.getMessage());
+            }
         }
     }
 }
