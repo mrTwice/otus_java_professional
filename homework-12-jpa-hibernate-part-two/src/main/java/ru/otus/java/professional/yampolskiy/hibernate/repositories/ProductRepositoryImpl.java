@@ -17,7 +17,7 @@ public class ProductRepositoryImpl extends AbstractRepository<Product, Long> imp
     @Override
     public Product findByName(String title) {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("FROM " + Product.class.getSimpleName() + " WHERE title = :title", Product.class)
+            return session.createQuery("FROM Product p WHERE p.title = :title", Product.class)
                     .setParameter("title", title)
                     .uniqueResult();
         }
