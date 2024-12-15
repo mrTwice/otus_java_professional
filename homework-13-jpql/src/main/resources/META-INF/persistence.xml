@@ -21,7 +21,7 @@
 
             <!-- (3) Настройки Hibernate -->
             <!-- с версии Hibernate 5.x не указывается: <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/> -->
-            <property name="hibernate.hbm2ddl.auto" value="none"/>
+            <property name="hibernate.hbm2ddl.validate" value="true"/>
 
             <!-- (4) Логирование SQL запросов -->
             <property name="hibernate.show_sql" value="true"/>

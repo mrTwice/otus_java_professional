@@ -18,6 +18,7 @@
   * `Address`
     ```java
     public class Address {
+        private Long id;
         private String street;
     }
     ```
@@ -25,6 +26,8 @@
   * `Phone`
     ```java
     public class Phone {
+        private Long id;
+        private Client client;
         private String number;
     }
     ```
