@@ -19,12 +19,12 @@ public class Client {
 
     private String name;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "address_id", referencedColumnName = "id", nullable = false)
     @ToString.Exclude
     private Address address;
 
-    @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "client", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<Phone> phones = new ArrayList<>();
 
@@ -49,6 +49,11 @@ public class Client {
     public void removePhone(Phone phone) {
         phones.remove(phone);
         phone.setClient(null);
+    }
+
+    public void changeAddress(Address address) {
+        this.address = address;
+        address.setClient(this);
     }
 }
 
