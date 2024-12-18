@@ -19,6 +19,7 @@
             <option value="$PROJECT_DIR$/homework-10-spring-context" />
             <option value="$PROJECT_DIR$/homework-11-spring-boot-part-one" />
             <option value="$PROJECT_DIR$/homework-12-jpa-hibernate-part-two" />
+            <option value="$PROJECT_DIR$/homework-13-jpql" />
           </set>
         </option>
       </GradleProjectSettings>

@@ -11,3 +11,5 @@ include 'homework-09-javaee-web-server'
 include 'homework-10-spring-context'
 include 'homework-11-spring-boot-part-one'
 include 'homework-12-jpa-hibernate-part-two'
+include 'homework-13-jpql'
+
