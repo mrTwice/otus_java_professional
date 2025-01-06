@@ -28,17 +28,17 @@ public class TransfersService {
     }
 
     public List<Transfer> getAllTransfers(String clientId) {
-        return transfersRepository.findAllByClientId(clientId);
+        return transfersRepository.findTransfersByClientId(clientId);
     }
 
     @Transactional
     public void execute(String clientId, ExecuteTransferDtoRq executeTransferDtoRq) {
         validateExecuteTransferDtoRq(executeTransferDtoRq);
 
-        Account sourceAccount = accountService.findByClientIdAndId(clientId, executeTransferDtoRq.sourceAccount())
+        Account sourceAccount = accountService.findByClientIdAndAccountNumber(clientId, executeTransferDtoRq.sourceAccount())
                 .orElseThrow(() -> new ResourceNotFoundException("Исходный счет не найден"));
 
-        Account targetAccount = accountService.findByClientIdAndId(clientId, executeTransferDtoRq.targetAccount())
+        Account targetAccount = accountService.findByClientIdAndAccountNumber(executeTransferDtoRq.targetClientId(), executeTransferDtoRq.targetAccount())
                 .orElseThrow(() -> new ResourceNotFoundException("Целевой счет не найден"));
 
         validateAccounts(sourceAccount, targetAccount, executeTransferDtoRq.amount());

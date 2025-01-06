@@ -38,9 +38,9 @@ public class AccountsController {
         return accountService.findAll(clientId).stream().map(toAccountDto).collect(Collectors.toList());
     }
 
-    @GetMapping("/{accountId}")
-    public AccountDto getAccount(@RequestHeader(name = "client-id") String clientId, @PathVariable String accountId) {
-        Account account = accountService.findByClientIdAndId(clientId, accountId).orElseThrow(() -> new ResourceNotFoundException("Перевод не найден"));
+    @GetMapping("/{accountNumber}")
+    public AccountDto getAccount(@RequestHeader(name = "client-id") String clientId, @PathVariable String accountNumber) {
+        Account account = accountService.findByClientIdAndAccountNumber(clientId, accountNumber).orElseThrow(() -> new ResourceNotFoundException("Перевод не найден"));
         return toAccountDto.apply(account);
     }
 }

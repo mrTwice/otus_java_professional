@@ -10,5 +10,5 @@ import java.util.Optional;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, String> {
     List<Account> findAllByClientId(String clientId);
-    Optional<Account> findByClientIdAndId(String clientId, String id);
+    Optional<Account> findByClientIdAndAccountNumber(String clientId, String accountNumber);
 }

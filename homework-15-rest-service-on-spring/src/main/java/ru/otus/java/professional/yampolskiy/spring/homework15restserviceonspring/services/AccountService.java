@@ -11,14 +11,14 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class AccountService {
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
 
     public List<Account> findAll(String clientId) {
         return accountRepository.findAllByClientId(clientId);
     }
 
-    public Optional<Account> findByClientIdAndId(String clientId, String id) {
-        return accountRepository.findByClientIdAndId(clientId, id);
+    public Optional<Account> findByClientIdAndAccountNumber(String clientId, String accountNumber) {
+        return accountRepository.findByClientIdAndAccountNumber(clientId, accountNumber);
     }
 
     public void save(Account account) {
