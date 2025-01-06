@@ -1,4 +1,4 @@
-package ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.exceptions_handling;
+package ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.exceptions_handling.validations;
 
 public class ValidationFieldError {
     private String field;

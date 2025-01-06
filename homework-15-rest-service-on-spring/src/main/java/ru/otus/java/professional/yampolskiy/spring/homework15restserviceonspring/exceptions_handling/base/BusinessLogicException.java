@@ -1,4 +1,4 @@
-package ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.exceptions_handling;
+package ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.exceptions_handling.base;
 
 public class BusinessLogicException extends RuntimeException {
     private String code;

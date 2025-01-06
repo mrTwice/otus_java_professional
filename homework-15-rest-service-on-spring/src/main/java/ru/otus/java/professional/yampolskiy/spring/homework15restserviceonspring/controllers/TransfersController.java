@@ -2,11 +2,11 @@ package ru.otus.java.professional.yampolskiy.spring.homework15restserviceonsprin
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.dtos.ExecuteTransferDtoRq;
-import ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.dtos.TransferDto;
-import ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.dtos.TransfersPageDto;
+import ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.dtos.transfers.ExecuteTransferDtoRq;
+import ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.dtos.transfers.TransferDto;
+import ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.dtos.transfers.TransfersPageDto;
 import ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.entities.Transfer;
-import ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.exceptions_handling.ResourceNotFoundException;
+import ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.exceptions_handling.base.ResourceNotFoundException;
 import ru.otus.java.professional.yampolskiy.spring.homework15restserviceonspring.services.TransfersService;
 
 
