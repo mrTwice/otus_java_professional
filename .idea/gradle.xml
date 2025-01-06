@@ -47,6 +47,14 @@
           </set>
         </option>
       </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/homework-15-rest-service-on-spring" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/homework-15-rest-service-on-spring" />
+          </set>
+        </option>
+      </GradleProjectSettings>
     </option>
   </component>
 </project>
