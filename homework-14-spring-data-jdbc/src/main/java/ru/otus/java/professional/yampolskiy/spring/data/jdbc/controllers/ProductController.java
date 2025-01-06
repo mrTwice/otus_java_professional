@@ -10,22 +10,16 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
-@RestController
 @RequestMapping("/api/v1/products")
+@RestController
+@RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
     private final Function<Product, ProductDTO> toProductDTO =
             product -> new ProductDTO(product.getId(), product.getName(), product.getPrice());
 
     private final Function<ProductDTO, Product> toProduct =
-            productDTO -> {
-                Product product = new Product();
-                product.setId(productDTO.id());
-                product.setName(productDTO.name());
-                product.setPrice(productDTO.price());
-                return product;
-            };
+            productDTO -> new Product(productDTO.id(), productDTO.name(), productDTO.price());
 
     @GetMapping
     public List<ProductDTO> getAllProducts() {

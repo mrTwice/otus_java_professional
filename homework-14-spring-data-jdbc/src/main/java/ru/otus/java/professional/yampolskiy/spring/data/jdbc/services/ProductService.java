@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.otus.java.professional.yampolskiy.spring.data.jdbc.entities.Product;
 import ru.otus.java.professional.yampolskiy.spring.data.jdbc.exceptions.FindException;
 import ru.otus.java.professional.yampolskiy.spring.data.jdbc.exceptions.SaveException;
+import ru.otus.java.professional.yampolskiy.spring.data.jdbc.exceptions.UpdateException;
 import ru.otus.java.professional.yampolskiy.spring.data.jdbc.repositories.ProductRepository;
 
 import java.util.List;
@@ -32,7 +33,7 @@ public class ProductService {
 
     public Product update(Product product) {
         if (product.getId() == null) {
-            throw new SaveException(Product.class.getSimpleName(), "Ошибка при обновлении объекта: ID IS NULL. Product: " + product);
+            throw new UpdateException(Product.class.getSimpleName(), "Ошибка при обновлении объекта: ID IS NULL. Product: " + product);
         }
         return productRepository.save(product);
     }
