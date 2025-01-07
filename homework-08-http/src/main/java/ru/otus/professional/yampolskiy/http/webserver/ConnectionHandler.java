@@ -32,7 +32,8 @@ public class ConnectionHandler implements Runnable {
             OutputStream out = socket.getOutputStream();
             HttpRequest httpRequest = parseRequest(in);
             if (httpRequest != null) {
-                logger.debug("[ОТЛАДКА]  Адрес с нормалным запросом: {}", socket.getRemoteSocketAddress());
+                if (isShutdown(httpRequest, out)) return;
+                logger.debug("[ОТЛАДКА]  Адрес с нормальным запросом: {}", socket.getRemoteSocketAddress());
                 httpRequest.setSocket(socket);
                 HttpResponse httpResponse = requestHandler.execute(httpRequest);
                 sendResponse(httpResponse, out);
@@ -49,6 +50,20 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
+    private boolean isShutdown(HttpRequest httpRequest, OutputStream out) {
+        if (httpRequest.getUri().getPath().equals("/shutdown")) {
+            server.stop();
+            logger.debug("Сервер будет остановлен");
+            sendResponse(new HttpResponse.Builder()
+                    .setProtocolVersion(httpRequest.getProtocolVersion())
+                    .setStatus(HttpStatus.OK)
+                    .setBody("Сервер будет остановлен")
+                    .build(), out);
+            return true;
+        }
+        return false;
+    }
+
     private HttpRequest parseRequest(InputStream in) throws IOException {
         HttpRequest httpRequest = new HttpRequest();
         ByteArrayOutputStream headersBuffer = new ByteArrayOutputStream();
@@ -61,7 +76,7 @@ public class ConnectionHandler implements Runnable {
             if (headerEndIndex != -1) {
                 headersBuffer.write(buffer, 0, headerEndIndex);
                 bodyStartIndex = headerEndIndex;
-                logger.debug("[ОТЛАДКА] Индекс конца заголовка: {} ",headerEndIndex);
+                logger.debug("[ОТЛАДКА] Индекс конца заголовка: {} ", headerEndIndex);
                 break;
             } else {
                 headersBuffer.write(buffer, 0, bytesRead);
@@ -71,7 +86,7 @@ public class ConnectionHandler implements Runnable {
         if (headersBuffer.size() != 0) {
             HttpParser.parseHeaders(httpRequest, headersBuffer.toString(StandardCharsets.UTF_8));
         } else {
-            logger.debug("[ОТЛАДКА]  кривой запрос: {}", httpRequest);
+            logger.debug("[ОТЛАДКА] кривой запрос: {}", httpRequest);
             logger.debug("[ОТЛАДКА] Пустые заголовки, возвращаем null.");
             return null;
         }
@@ -81,10 +96,12 @@ public class ConnectionHandler implements Runnable {
                 in
         );
         httpRequest.setBodyStream(bodyStream);
-        logger.debug("Тело начинается с индекса:  {}",bodyStartIndex);
+        logger.debug("[ОТЛАДКА] Тело начинается с индекса:  {}", bodyStartIndex);
+        logger.debug("[ОТЛАДКА] Длина прочитанного до тела: {} байт", headersBuffer.size());
 
         return httpRequest;
     }
+
 
     private int findHeaderEnd(byte[] buffer, int length) {
         for (int i = 0; i < length - 3; i++) {

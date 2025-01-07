@@ -18,6 +18,7 @@ public class ServletDispatcher implements RequestHandler {
     @Override
     public HttpResponse execute(HttpRequest request) throws IOException {
         String body = workWithBody(request);
+        logger.debug("[ОТЛАДКА]  Тело запроса: {}",body);
         return new HttpResponse.Builder()
                 .setProtocolVersion(request.getProtocolVersion())
                 .setStatus(HttpStatus.OK)

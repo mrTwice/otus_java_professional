@@ -8,6 +8,8 @@ public class HttpParser {
     private static final Logger logger = LogManager.getLogger(HttpParser.class);
 
     public static void parseHeaders(HttpRequest httpRequest, String rawHeaders) {
+        logger.debug("[ОТЛАДКА]  RequestLine & Headers: {}", rawHeaders);
+        logger.debug("[ОТЛАДКА]  Размер RequestLine & Headers: {}", rawHeaders.getBytes().length);
         String[] lines = rawHeaders.split("\r\n");
         String[] requestLine = lines[0].split(" ");
         httpRequest.setMethod(requestLine[0].trim());
