@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <!-- Указание имени конфигурации -->
+    <Properties>
+        <!-- Путь к лог-файлу -->
+        <Property name="logFile">logs/homework13.log</Property>
+    </Properties>
+
+    <!-- Настройка appenders -->
+    <Appenders>
+        <!-- File Appender: записывает логи в указанный файл -->
+        <File name="FileAppender" fileName="${logFile}" append="true">
+            <PatternLayout>
+                <!-- Форматирование логов -->
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Pattern>
+            </PatternLayout>
+        </File>
+    </Appenders>
+
+    <!-- Настройка логгеров -->
+    <Loggers>
+        <!-- Рoot logger: уровень логгирования и привязка к Appender -->
+        <Root level="info">
+            <AppenderRef ref="FileAppender" />
+        </Root>
+    </Loggers>
+</Configuration>
