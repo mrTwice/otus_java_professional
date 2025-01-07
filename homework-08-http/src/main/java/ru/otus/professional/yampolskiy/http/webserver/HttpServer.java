@@ -15,8 +15,8 @@ public class HttpServer {
     private final Logger logger = LogManager.getLogger(HttpServer.class);
     private final int port;
     private boolean isRunning = false;
-    private ExecutorService threadPool;
-    private RequestHandler requestHandler;
+    private final ExecutorService threadPool;
+    private final RequestHandler requestHandler;
     private ServerSocket serverSocket;
 
     public HttpServer(int port) throws Exception {

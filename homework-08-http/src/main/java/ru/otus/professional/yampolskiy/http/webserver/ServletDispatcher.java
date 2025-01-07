@@ -8,9 +8,8 @@ import ru.otus.professional.yampolskiy.http.webserver.http.HttpResponse;
 import ru.otus.professional.yampolskiy.http.webserver.http.HttpStatus;
 import ru.otus.professional.yampolskiy.http.webserver.interfaces.RequestHandler;
 
-import java.io.*;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class ServletDispatcher implements RequestHandler {
     private final Logger logger = LogManager.getLogger(this.getClass().getName());
@@ -18,7 +17,6 @@ public class ServletDispatcher implements RequestHandler {
     @Override
     public HttpResponse execute(HttpRequest request) throws IOException {
         String body = workWithBody(request);
-        logger.debug("[ОТЛАДКА]  Тело запроса: {}",body);
         return new HttpResponse.Builder()
                 .setProtocolVersion(request.getProtocolVersion())
                 .setStatus(HttpStatus.OK)
@@ -27,21 +25,23 @@ public class ServletDispatcher implements RequestHandler {
                 .build();
     }
 
+    /**
+     * Имитация обработки тела запроса, для того, чтобы можно было убедится, что оно долетает в целости до ServletDispatcher
+     */
     private String workWithBody(HttpRequest request) throws IOException {
-        StringBuilder result = new StringBuilder();
         InputStream bodyStream = request.getBodyStream();
+        String rawRequest ="";
         try {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = bodyStream.read(buffer)) != -1) {
-                result.append(new String(buffer, 0, bytesRead, StandardCharsets.UTF_8));
+            byte[] buffer = new byte[8192];
+            int n = bodyStream.read(buffer);
+            if (n > 0) {
+                rawRequest = new String(buffer, 0, n);
             }
         } catch (IOException e) {
-            logger.error("[ОТЛАДКА]  Ошибка при чтении тела запроса",e);
+            logger.error("[ОТЛАДКА]  Ошибка при чтении тела запроса", e);
             throw new IOException("Ошибка при чтении тела запроса", e);
         }
-        logger.debug("[ОТЛАДКА]  Размер тела запроса {}", result.toString().getBytes().length);
-        return result.toString();
+        return rawRequest;
     }
 
 
