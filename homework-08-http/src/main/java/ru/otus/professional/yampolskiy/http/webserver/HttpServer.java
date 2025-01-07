@@ -37,7 +37,7 @@ public class HttpServer {
         isRunning = true;
         try {
             serverSocket = new ServerSocket(port);
-            logger.debug("Сервер запущен на порту: {}", port);
+            logger.debug("[ОТЛАДКА]  Сервер запущен на порту: {}", port);
 
             while (isRunning) {
                 try {
@@ -50,11 +50,11 @@ public class HttpServer {
                     if (!isRunning) {
                         break;
                     }
-                    logger.error("Ошибка при принятии подключения", e);
+                    logger.error("[ОТЛАДКА]  Ошибка при принятии подключения", e);
                 }
             }
         } catch (IOException e) {
-            logger.error("Ошибка запуска сервера", e);
+            logger.error("[ОТЛАДКА]  Ошибка запуска сервера", e);
         } finally {
             stop();
         }
@@ -72,16 +72,16 @@ public class HttpServer {
                 if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
                     threadPool.shutdownNow();
                     if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
-                        logger.error("Пул потоков не остановлен");
+                        logger.error("[ОТЛАДКА]  Пул потоков не остановлен");
                     }
                 }
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
-                logger.warn("Ожидание завершения потоков прервано");
+                logger.warn("[ОТЛАДКА]  Ожидание завершения потоков прервано");
             }
         } catch (IOException e) {
-            logger.error("Ошибка при остановке сервера", e);
+            logger.error("[ОТЛАДКА]  Ошибка при остановке сервера", e);
         }
-        logger.debug("Сервер остановлен");
+        logger.debug("[ОТЛАДКА]  Сервер остановлен");
     }
 }

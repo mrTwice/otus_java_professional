@@ -11,13 +11,24 @@ public class HttpRequest extends Http{
     private URI uri;
     private String protocolVersion;
     private Map<String, String> requestParameters;
-    private final Socket socket;
-    private final InputStream bodyStream;
+    private Socket socket;
+    private InputStream bodyStream;
 
     public HttpRequest(InputStream bodyStream, Socket socket) {
         this.socket = socket;
         this.bodyStream = bodyStream;
         this.requestParameters = new HashMap<>();
+    }
+
+    public HttpRequest() {
+    }
+
+    public void setSocket(Socket socket) {
+        this.socket = socket;
+    }
+
+    public void setBodyStream(InputStream bodyStream) {
+        this.bodyStream = bodyStream;
     }
 
     public HttpMethod getMethod() {
@@ -28,12 +39,21 @@ public class HttpRequest extends Http{
         this.method = method;
     }
 
+    public void setMethod(String method) {
+        this.method = HttpMethod.fromString(method);
+    }
+
+
     public URI getUri() {
         return uri;
     }
 
     public void setUri(URI uri) {
         this.uri = uri;
+    }
+
+    public void setUri(String uri) {
+        this.setUri(URI.create(uri));
     }
 
     public String getProtocolVersion() {
