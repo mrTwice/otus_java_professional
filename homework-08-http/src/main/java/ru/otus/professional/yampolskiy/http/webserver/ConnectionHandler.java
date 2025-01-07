@@ -27,22 +27,25 @@ public class ConnectionHandler implements Runnable {
 
     @Override
     public void run() {
-        try (InputStream in = socket.getInputStream();
-             OutputStream out = socket.getOutputStream()) {
-
+        try{
+            InputStream in = socket.getInputStream();
+            OutputStream out = socket.getOutputStream();
             HttpRequest httpRequest = parseRequest(in);
-            if (httpRequest == null) {
-                return;
+            if (httpRequest != null) {
+                logger.debug("[ОТЛАДКА]  Адрес с нормалным запросом: {}", socket.getRemoteSocketAddress());
+                httpRequest.setSocket(socket);
+                HttpResponse httpResponse = requestHandler.execute(httpRequest);
+                sendResponse(httpResponse, out);
+            } else {
+                logger.debug("[ОТЛАДКА]  Адрес пустого запроса: {}", socket.getRemoteSocketAddress());
             }
-            HttpResponse httpResponse = requestHandler.execute(httpRequest);
-            logger.debug("[ОТЛАДКА]  ОТВЕТ: {}", httpResponse.toString());
-            sendResponse(httpResponse, out);
+
 
         } catch (Exception e) {
             logger.error("[ОТЛАДКА]  Ошибка обработки запроса", e);
-            sendErrorResponse(socket, HttpStatus.INTERNAL_SERVER_ERROR.getCode(), "Internal Server Error");
-        } finally {
-            closeSocket();
+            sendErrorResponse(socket, HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error");
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -58,6 +61,7 @@ public class ConnectionHandler implements Runnable {
             if (headerEndIndex != -1) {
                 headersBuffer.write(buffer, 0, headerEndIndex);
                 bodyStartIndex = headerEndIndex;
+                logger.debug("[ОТЛАДКА] Индекс конца заголовка: {} ",headerEndIndex);
                 break;
             } else {
                 headersBuffer.write(buffer, 0, bytesRead);
@@ -66,13 +70,18 @@ public class ConnectionHandler implements Runnable {
 
         if (headersBuffer.size() != 0) {
             HttpParser.parseHeaders(httpRequest, headersBuffer.toString(StandardCharsets.UTF_8));
-        } else return null;
+        } else {
+            logger.debug("[ОТЛАДКА]  кривой запрос: {}", httpRequest);
+            logger.debug("[ОТЛАДКА] Пустые заголовки, возвращаем null.");
+            return null;
+        }
 
         InputStream bodyStream = new SequenceInputStream(
                 new ByteArrayInputStream(buffer, bodyStartIndex, bytesRead - bodyStartIndex),
                 in
         );
         httpRequest.setBodyStream(bodyStream);
+        logger.debug("Тело начинается с индекса:  {}",bodyStartIndex);
 
         return httpRequest;
     }
@@ -88,6 +97,10 @@ public class ConnectionHandler implements Runnable {
     }
 
     private void sendResponse(HttpResponse httpResponse, OutputStream out) {
+        if (socket.isClosed()) {
+            logger.debug("[ОТЛАДКА]  Сокет был закрыт до отправки сообщения");
+            return;
+        }
         try {
             out.write(httpResponse.toString().getBytes(StandardCharsets.UTF_8));
             out.flush();
@@ -97,11 +110,11 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
-    private void sendErrorResponse(Socket socket, int statusCode, String message) {
+    private void sendErrorResponse(Socket socket, HttpStatus httpStatus, String message) {
         try (OutputStream out = socket.getOutputStream()) {
             HttpResponse httpResponse = new HttpResponse.Builder()
                     .setProtocolVersion("HTTP/1.1")
-                    .setStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .setStatus(httpStatus)
                     .addHeader(HttpHeader.CONTENT_TYPE, "text/plain; charset=UTF-8")
                     .setBody(message)
                     .build();
