@@ -2,8 +2,6 @@ package ru.otus.professional.yampolskiy.http.webserver.parser;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.otus.professional.yampolskiy.http.webserver.http.HttpHeaders;
-import ru.otus.professional.yampolskiy.http.webserver.http.HttpMethod;
 import ru.otus.professional.yampolskiy.http.webserver.http.HttpRequest;
 
 import java.net.URI;
@@ -63,38 +61,23 @@ public class HttpParser {
 
 
     private static void getHeaders(HttpRequest httpRequest, String headers) {
-        int start = 0;
-        int end;
-
-        while ((end = headers.indexOf("\r\n", start)) != -1) {
-            if (headers.indexOf(':', start) != -1 && headers.indexOf(':', start) < end) {
+        int index;
+        for (String header : headers.split("\r\n")) {
+            if ((index = header.indexOf(':')) != -1) {
                 httpRequest.addHeader(
-                        extractTrimmedSubstring(headers, start, headers.indexOf(':', start)),
-                        extractTrimmedSubstring(headers, headers.indexOf(':', start) + 1, end));
-            }
-            start = end + 2;
-        }
-
-        if (start < headers.length()) {
-            if (headers.indexOf(':', start) != -1) {
-                httpRequest.addHeader(
-                        extractTrimmedSubstring(headers, start, headers.indexOf(':', start)),
-                        extractTrimmedSubstring(headers, headers.indexOf(':', start) + 1,
-                                headers.length()
-                        )
+                        extractTrimmedSubstring(header, 0, index),
+                        extractTrimmedSubstring(header, index + 1, header.length())
                 );
             }
         }
     }
+
 
     private static String extractTrimmedSubstring(String str, int start, int end) {
         while (start < end && Character.isWhitespace(str.charAt(start))) start++;
         while (end > start && Character.isWhitespace(str.charAt(end - 1))) end--;
         return str.substring(start, end);
     }
-
-
-
 }
 
 
