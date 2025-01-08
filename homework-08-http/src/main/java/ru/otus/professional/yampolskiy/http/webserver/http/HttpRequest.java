@@ -21,6 +21,7 @@ public class HttpRequest extends Http{
     }
 
     public HttpRequest() {
+        requestParameters = new HashMap<>();
     }
 
     public void setSocket(Socket socket) {

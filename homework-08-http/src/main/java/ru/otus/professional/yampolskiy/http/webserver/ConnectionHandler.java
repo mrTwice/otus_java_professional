@@ -40,7 +40,7 @@ public class ConnectionHandler implements Runnable {
 
 
         } catch (Exception e) {
-            sendErrorResponse(socket, HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error");
+            sendErrorResponse(socket, HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
             closeSocket();
         }
@@ -79,7 +79,7 @@ public class ConnectionHandler implements Runnable {
         }
 
         if (headersBuffer.size() != 0) {
-            HttpParser.parseHeaders(httpRequest, headersBuffer.toString(StandardCharsets.UTF_8));
+            HttpParser.parse(httpRequest, headersBuffer.toString(StandardCharsets.UTF_8));
         } else {
             return null;
         }
