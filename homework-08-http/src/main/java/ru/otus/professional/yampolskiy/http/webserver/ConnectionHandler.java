@@ -2,16 +2,16 @@ package ru.otus.professional.yampolskiy.http.webserver;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.professional.yampolskiy.http.webserver.http.HttpHeader;
 import ru.otus.professional.yampolskiy.http.webserver.http.HttpRequest;
 import ru.otus.professional.yampolskiy.http.webserver.http.HttpResponse;
+import ru.otus.professional.yampolskiy.http.webserver.http.HttpStatus;
 import ru.otus.professional.yampolskiy.http.webserver.interfaces.RequestHandler;
 import ru.otus.professional.yampolskiy.http.webserver.parser.HttpParser;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-
-import ru.otus.professional.yampolskiy.http.webserver.http.*;
 
 public class ConnectionHandler implements Runnable {
     private static final Logger logger = LogManager.getLogger(ConnectionHandler.class);
@@ -27,9 +27,8 @@ public class ConnectionHandler implements Runnable {
 
     @Override
     public void run() {
-        try{
-            InputStream in = socket.getInputStream();
-            OutputStream out = socket.getOutputStream();
+        try (InputStream in = socket.getInputStream();
+             OutputStream out = socket.getOutputStream()) {
             HttpRequest httpRequest = parseRequest(in);
             if (httpRequest != null) {
                 if (isShutdown(httpRequest, out)) return;
@@ -37,8 +36,6 @@ public class ConnectionHandler implements Runnable {
                 HttpResponse httpResponse = requestHandler.execute(httpRequest);
                 sendResponse(httpResponse, out);
             }
-
-
         } catch (Exception e) {
             sendErrorResponse(socket, HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
@@ -68,33 +65,40 @@ public class ConnectionHandler implements Runnable {
         int bodyStartIndex = 0;
 
         while ((bytesRead = in.read(buffer)) != -1) {
-            int headerEndIndex = findHeaderEnd(buffer, bytesRead);
-            if (headerEndIndex != -1) {
-                headersBuffer.write(buffer, 0, headerEndIndex);
-                bodyStartIndex = headerEndIndex;
+            int headersEndIndex = findHeadersEnd(buffer, bytesRead);
+            if (headersEndIndex != -1) {
+                headersBuffer.write(buffer, 0, headersEndIndex);
+                bodyStartIndex = headersEndIndex;
                 break;
             } else {
                 headersBuffer.write(buffer, 0, bytesRead);
             }
         }
 
-        if (headersBuffer.size() != 0) {
-            HttpParser.parse(httpRequest, headersBuffer.toString(StandardCharsets.UTF_8));
-        } else {
+        if (headersBuffer.size() == 0) {
             return null;
         }
 
-        InputStream bodyStream = new SequenceInputStream(
-                new ByteArrayInputStream(buffer, bodyStartIndex, bytesRead - bodyStartIndex),
-                in
-        );
+        parseRequest(httpRequest, headersBuffer.toString(StandardCharsets.UTF_8));
+
+        InputStream bodyStream = prepareBodyStream(buffer, bodyStartIndex, bytesRead, in);
         httpRequest.setBodyStream(bodyStream);
 
         return httpRequest;
     }
 
+    private void parseRequest(HttpRequest httpRequest, String request) {
+        HttpParser.parse(httpRequest, request);
+    }
 
-    private int findHeaderEnd(byte[] buffer, int length) {
+    private InputStream prepareBodyStream(byte[] buffer, int bodyStartIndex, int bytesRead, InputStream in) {
+        return new SequenceInputStream(
+                new ByteArrayInputStream(buffer, bodyStartIndex, bytesRead - bodyStartIndex),
+                in
+        );
+    }
+
+    private int findHeadersEnd(byte[] buffer, int length) {
         for (int i = 0; i < length - 3; i++) {
             if (buffer[i] == '\r' && buffer[i + 1] == '\n' &&
                     buffer[i + 2] == '\r' && buffer[i + 3] == '\n') {
