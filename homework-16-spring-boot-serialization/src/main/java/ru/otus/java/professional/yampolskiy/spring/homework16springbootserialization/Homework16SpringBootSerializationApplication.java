@@ -1,6 +1,7 @@
 package ru.otus.java.professional.yampolskiy.spring.homework16springbootserialization;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
