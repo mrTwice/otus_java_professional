@@ -55,6 +55,14 @@
           </set>
         </option>
       </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/homework-16-spring-boot-serialization" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/homework-16-spring-boot-serialization" />
+          </set>
+        </option>
+      </GradleProjectSettings>
     </option>
   </component>
 </project>
