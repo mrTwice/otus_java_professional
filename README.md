@@ -16,4 +16,5 @@
 * ### [Домашнее задание №12: JPA/Hibernate](homework-12-jpa-hibernate-part-two/README.md)
 * ### [Домашнее задание №13: JPQL](homework-13-jpql/README.md)
 * ### [Домашнее задание №14: Spring Data JDBC](homework-14-spring-data-jdbc/README.md)
+* ### [Домашнее задание №14: REST](homework-15-rest-service-on-spring/README.md)
 

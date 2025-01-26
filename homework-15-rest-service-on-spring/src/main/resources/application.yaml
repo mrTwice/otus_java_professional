@@ -1,0 +1,49 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: spring-app
+  config:
+    import: optional:file:./homework-15-rest-service-on-spring/.env[.properties]
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: ${DATABASE_DRIVER}
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      pool-name: HikariPool
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  jpa:
+    show-sql: true
+    open-in-view: false
+  flyway:
+    enabled: true  # Включение Flyway (по умолчанию включено)
+    url: ${DATABASE_URL}  # URL базы данных
+    user: ${DATABASE_USER}  # Пользователь базы данных
+    password: ${DATABASE_PASSWORD}  # Пароль пользователя
+    locations: ${FLYWAY_LOCATIONS}  # Путь к миграциям (можно указать несколько через запятую)
+    baseline-on-migrate: true  # Создание базовой версии при первом запуске
+    out-of-order: true  # Позволяет запускать миграции вне порядка (при необходимости)
+    validate-on-migrate: true  # Валидация миграций перед запуском
+  docker:
+    compose:
+      file:  ./homework-15-rest-service-on-spring/docker-compose.yaml
+
+logging:
+  level:
+    org:
+      springframework: INFO
+      hibernate: INFO
+    com:
+      example:
+        demo: DEBUG
+  file:
+    name: logs/app.log
+  pattern:
+    file: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger - %msg%n'
