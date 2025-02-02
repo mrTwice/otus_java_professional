@@ -27,11 +27,16 @@ public class ConnectionHandler implements Runnable {
 
     @Override
     public void run() {
-        try (InputStream in = socket.getInputStream();
-             OutputStream out = socket.getOutputStream()) {
+        try {
+            InputStream in = socket.getInputStream();
+            OutputStream out = socket.getOutputStream();
             HttpRequest httpRequest = parseRequest(in);
-            if (httpRequest != null) {
-                if (isShutdown(httpRequest, out)) return;
+            if(httpRequest == null) {
+                System.out.println("Пустой запрос");
+            } else {
+                if (isShutdown(httpRequest, out)) {
+                    return;
+                }
                 httpRequest.setSocket(socket);
                 HttpResponse httpResponse = requestHandler.execute(httpRequest);
                 sendResponse(httpResponse, out);
@@ -59,43 +64,38 @@ public class ConnectionHandler implements Runnable {
 
     private HttpRequest parseRequest(InputStream in) throws IOException {
         HttpRequest httpRequest = new HttpRequest();
-        ByteArrayOutputStream headersBuffer = new ByteArrayOutputStream();
-        byte[] buffer = new byte[8192];
-        int bytesRead;
-        int bodyStartIndex = 0;
+        BufferedInputStream bufferedInput = new BufferedInputStream(in);
+        PushbackInputStream pushbackInput = new PushbackInputStream(bufferedInput, 8192);
 
-        while ((bytesRead = in.read(buffer)) != -1) {
-            int headersEndIndex = findHeadersEnd(buffer, bytesRead);
+        byte[] buffer = new byte[8192];
+        int totalBytesRead = 0, bytesRead;
+        int headersEndIndex = -1;
+
+        while ((bytesRead = pushbackInput.read(buffer)) != -1) {
+            totalBytesRead += bytesRead;
+            headersEndIndex = findHeadersEnd(buffer, bytesRead);
             if (headersEndIndex != -1) {
-                headersBuffer.write(buffer, 0, headersEndIndex);
-                bodyStartIndex = headersEndIndex;
-                break;
-            } else {
-                headersBuffer.write(buffer, 0, bytesRead);
+                parseRequest(httpRequest, new String(buffer, 0, headersEndIndex, StandardCharsets.UTF_8));
+
+                int remaining = bytesRead - headersEndIndex;
+                if (remaining > 0) {
+                    pushbackInput.unread(buffer, headersEndIndex, remaining);
+                }
+                if (pushbackInput.available() > 0) {
+                    httpRequest.setBodyStream(pushbackInput);
+                }
+                return httpRequest;
+            }
+            if (totalBytesRead > 64 * 1024) {
+                throw new IOException("Превышен максимальный размер заголовков (64 KB)");
             }
         }
-
-        if (headersBuffer.size() == 0) {
-            return null;
-        }
-
-        parseRequest(httpRequest, headersBuffer.toString(StandardCharsets.UTF_8));
-
-        InputStream bodyStream = prepareBodyStream(buffer, bodyStartIndex, bytesRead, in);
-        httpRequest.setBodyStream(bodyStream);
-
-        return httpRequest;
+        return null;
     }
+
 
     private void parseRequest(HttpRequest httpRequest, String request) {
         HttpParser.parse(httpRequest, request);
-    }
-
-    private InputStream prepareBodyStream(byte[] buffer, int bodyStartIndex, int bytesRead, InputStream in) {
-        return new SequenceInputStream(
-                new ByteArrayInputStream(buffer, bodyStartIndex, bytesRead - bodyStartIndex),
-                in
-        );
     }
 
     private int findHeadersEnd(byte[] buffer, int length) {
@@ -110,6 +110,7 @@ public class ConnectionHandler implements Runnable {
 
     private void sendResponse(HttpResponse httpResponse, OutputStream out) {
         if (socket.isClosed()) {
+            logger.error("[ОТЛАДКА]  Ошибка при отправке ответа, сокет закрыт");
             return;
         }
         try {

@@ -18,8 +18,8 @@ public class HttpHeaders {
         headers.remove(key);
     }
 
-    public String getHeader(String key) {
-        return headers.get(key);
+    public String getHeader(HttpHeader header) {
+        return headers.get(header.getHeaderName());
     }
 
     public Map<String, String> getAllHeaders() {

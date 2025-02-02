@@ -73,6 +73,12 @@ public class HttpRequest extends Http{
         return getHeader(HttpHeader.CONTENT_TYPE);
     }
 
+    public int getContentLength() {
+        String contentLength = headers.getHeader(HttpHeader.CONTENT_LENGTH);
+        return Integer.parseInt(contentLength);
+    }
+
+
 
     public void setRequestParameters(Map<String, String> requestParameters) {
         this.requestParameters = requestParameters;
@@ -117,7 +123,6 @@ public class HttpRequest extends Http{
     }
 
     public String getHeader(HttpHeader httpHeader) {
-        String header = httpHeader.getHeaderName();
-        return headers.getHeader(header);
+        return httpHeader.getHeaderName();
     }
 }
