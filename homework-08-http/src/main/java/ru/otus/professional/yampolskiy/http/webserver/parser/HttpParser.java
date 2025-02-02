@@ -8,74 +8,82 @@ import java.net.URI;
 
 public class HttpParser {
     private static final Logger logger = LogManager.getLogger(HttpParser.class);
-    private static final int OFFSET = 1;
 
     public static void parse(HttpRequest httpRequest, String rawHeaders) {
-        parseRequestLine(rawHeaders.substring(0, rawHeaders.indexOf("\r\n")), httpRequest);
-        getHeaders(httpRequest, rawHeaders.substring(rawHeaders.indexOf("\r\n") + 2));
+        int firstLineEnd = rawHeaders.indexOf("\r\n");
+        parseRequestLine(rawHeaders.substring(0, firstLineEnd), httpRequest);
+        parseHeaders(httpRequest, rawHeaders, firstLineEnd + 2);
         logger.debug("[ЗАПРОС] {}", httpRequest.toString());
     }
 
-    private static void parseRequestLine(String requestLines, HttpRequest httpRequest) {
-        parseProtocolVersion(
-                requestLines,
-                httpRequest,
-                parseUriAndParameters(
-                        requestLines,
-                        httpRequest,
-                        parseMethod(
-                                requestLines,
-                                httpRequest
-                        )
-                )
-        );
+    private static void parseRequestLine(String requestLine, HttpRequest httpRequest) {
+        int methodEnd = requestLine.indexOf(' ');
+        httpRequest.setMethod(requestLine.substring(0, methodEnd));
+
+        int uriStart = methodEnd + 1;
+        int uriEnd = requestLine.indexOf(' ', uriStart);
+        String uriPart = requestLine.substring(uriStart, uriEnd);
+
+        processUriAndParams(httpRequest, uriPart);
+        httpRequest.setProtocolVersion(requestLine.substring(uriEnd + 1));
     }
 
-    private static void parseProtocolVersion(String requestLines, HttpRequest httpRequest, int uriEndIndex) {
-        httpRequest.setProtocolVersion(requestLines.substring(uriEndIndex));
-    }
-
-    private static int parseMethod(String requestLines, HttpRequest httpRequest) {
-        httpRequest.setMethod(requestLines.substring(0, requestLines.indexOf(' ')));
-        return requestLines.indexOf(' ') + OFFSET;
-    }
-
-    private static int parseUriAndParameters(String requestLines, HttpRequest httpRequest, int methodEndIndex) {
-        if (requestLines.substring(methodEndIndex, requestLines.indexOf(' ', methodEndIndex)).indexOf('?') != -1) {
-            httpRequest.setUri(URI.create(requestLines.substring(methodEndIndex, requestLines.indexOf(' ', methodEndIndex)).substring(0, requestLines.substring(methodEndIndex, requestLines.indexOf(' ', methodEndIndex)).indexOf('?'))));
-            for (String pair : requestLines.substring(methodEndIndex, requestLines.indexOf(' ', methodEndIndex)).substring(requestLines.substring(methodEndIndex, requestLines.indexOf(' ', methodEndIndex)).indexOf('?') + 1).split("&")) {
-                if (pair.indexOf('=') != -1) {
-                    httpRequest.addRequestParameter(
-                            pair.substring(0, pair.indexOf('=')),
-                            pair.substring(pair.indexOf('=') + 1)
-                    );
-                }
-            }
-        } else {
-            httpRequest.setUri(URI.create(requestLines.substring(methodEndIndex, requestLines.indexOf(' ', methodEndIndex))));
+    private static void processUriAndParams(HttpRequest httpRequest, String uriPart) {
+        int paramsStart = uriPart.indexOf('?');
+        if(paramsStart == -1) {
+            httpRequest.setUri(URI.create(uriPart));
+            return;
         }
 
-        return requestLines.indexOf(' ', methodEndIndex) + OFFSET;
+        httpRequest.setUri(URI.create(uriPart.substring(0, paramsStart)));
+        parseParams(uriPart, paramsStart + 1, httpRequest);
     }
 
+    private static void parseParams(String uriPart, int paramsStart, HttpRequest httpRequest) {
+        int pos = paramsStart;
+        while(pos < uriPart.length()) {
+            int eqPos = uriPart.indexOf('=', pos);
+            if(eqPos == -1) break;
 
+            int ampPos = uriPart.indexOf('&', eqPos);
+            if(ampPos == -1) ampPos = uriPart.length();
 
-    private static void getHeaders(HttpRequest httpRequest, String headers) {
-        int index;
-        for (String header : headers.split("\r\n")) {
-            if ((index = header.indexOf(':')) != -1) {
-                httpRequest.addHeader(
-                        extractTrimmedSubstring(header, 0, index),
-                        extractTrimmedSubstring(header, index + 1, header.length())
-                );
-            }
+            String key = uriPart.substring(pos, eqPos);
+            String value = eqPos + 1 < ampPos
+                    ? uriPart.substring(eqPos + 1, ampPos)
+                    : "";
+
+            httpRequest.addRequestParameter(key, value);
+            pos = ampPos + 1;
         }
     }
 
+    private static void parseHeaders(HttpRequest httpRequest, String headers, int startPos) {
+        int pos = startPos;
+        while(pos < headers.length()) {
+            int lineEnd = headers.indexOf("\r\n", pos);
+            if(lineEnd == -1) lineEnd = headers.length();
 
-    private static String extractTrimmedSubstring(String str, int start, int end) {
-        while (start < end && Character.isWhitespace(str.charAt(start))) start++;
-        while (end > start && Character.isWhitespace(str.charAt(end - 1))) end--;
+            String headerLine = headers.substring(pos, lineEnd);
+            processHeaderLine(headerLine, httpRequest);
+
+            pos = lineEnd + 2;
+            if(pos >= headers.length()) break;
+        }
+    }
+
+    private static void processHeaderLine(String headerLine, HttpRequest httpRequest) {
+        int colonPos = headerLine.indexOf(':');
+        if(colonPos == -1) return;
+
+        String name = trimSubstring(headerLine, 0, colonPos);
+        String value = trimSubstring(headerLine, colonPos + 1, headerLine.length());
+        httpRequest.addHeader(name, value);
+    }
+
+    private static String trimSubstring(String str, int start, int end) {
+        while(start < end && Character.isWhitespace(str.charAt(start))) start++;
+        while(end > start && Character.isWhitespace(str.charAt(end - 1))) end--;
         return str.substring(start, end);
     }
 }
