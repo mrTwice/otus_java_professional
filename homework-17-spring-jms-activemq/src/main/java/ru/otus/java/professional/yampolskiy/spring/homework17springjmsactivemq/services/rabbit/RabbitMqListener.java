@@ -1,4 +1,4 @@
-package ru.otus.java.professional.yampolskiy.spring.homework17springjmsactivemq.services;
+package ru.otus.java.professional.yampolskiy.spring.homework17springjmsactivemq.services.rabbit;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,7 +20,7 @@ public class RabbitMqListener {
     private final ObjectMapper objectMapper;
 
     @JmsListener(destination = RabbitMqConfig.DESTINATION_NAME
-            , containerFactory = RabbitMqConfig.JMS_LISTENER_CONTAINER_FACTORY)
+            , containerFactory = RabbitMqConfig.RABBIT_MQ_JMS_LISTENER_CONTAINER_FACTORY)
     public void onMessage(Message message) {
         try {
             if (message instanceof TextMessage)

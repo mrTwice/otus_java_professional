@@ -15,15 +15,15 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class RabbitMqConfig {
 
-    public static final String JMS_TEMPLATE = "rabbitMqJmsTemplate";
-    public static final String JMS_LISTENER_CONTAINER_FACTORY = "rabbitMqJmsListenerContainerFactory";
+    public static final String RABBIT_MQ_JMS_TEMPLATE = "rabbitMqJmsTemplate";
+    public static final String RABBIT_MQ_JMS_LISTENER_CONTAINER_FACTORY = "rabbitMqJmsListenerContainerFactory";
 
-    private static final String CONNECTION_FACTORY = "rabbitMqConnectionFactory";
+    private static final String RABBIT_MQ_CONNECTION_FACTORY = "rabbitMqConnectionFactory";
 
     public static final String DESTINATION_NAME = "foo";
     public static final String CLASS_NAME = "className";
 
-    @Bean(CONNECTION_FACTORY)
+    @Bean(RABBIT_MQ_CONNECTION_FACTORY)
     public ConnectionFactory connectionFactory() {
         RMQConnectionFactory connectionFactory = new RMQConnectionFactory();
         connectionFactory.setHost("localhost");
@@ -33,16 +33,16 @@ public class RabbitMqConfig {
         return connectionFactory;
     }
 
-    @Bean(JMS_TEMPLATE)
-    public JmsTemplate jmsTemplate(@Qualifier(CONNECTION_FACTORY) ConnectionFactory cachingConnectionFactory) {
+    @Bean(RABBIT_MQ_JMS_TEMPLATE)
+    public JmsTemplate jmsTemplate(@Qualifier(RABBIT_MQ_CONNECTION_FACTORY) ConnectionFactory cachingConnectionFactory) {
         JmsTemplate jmsTemplate = new JmsTemplate(cachingConnectionFactory);
         jmsTemplate.setReceiveTimeout(TimeUnit.SECONDS.toMillis(10));
         return jmsTemplate;
     }
 
-    @Bean(JMS_LISTENER_CONTAINER_FACTORY)
+    @Bean(RABBIT_MQ_JMS_LISTENER_CONTAINER_FACTORY)
     public JmsListenerContainerFactory<?> jmsListenerContainerFactory(
-            @Qualifier(CONNECTION_FACTORY) ConnectionFactory connectionFactory,
+            @Qualifier(RABBIT_MQ_CONNECTION_FACTORY) ConnectionFactory connectionFactory,
             DefaultJmsListenerContainerFactoryConfigurer configurer) {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         configurer.configure(factory, connectionFactory);

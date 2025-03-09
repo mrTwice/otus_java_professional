@@ -1,4 +1,4 @@
-package ru.otus.java.professional.yampolskiy.spring.homework17springjmsactivemq.services;
+package ru.otus.java.professional.yampolskiy.spring.homework17springjmsactivemq.services.rabbit;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,7 +30,7 @@ public class RabbitMqProducer {
     private final Random random = new Random();
     private final ObjectMapper objectMapper;
 
-    public RabbitMqProducer(@Qualifier(RabbitMqConfig.JMS_TEMPLATE) JmsTemplate jmsTemplate,
+    public RabbitMqProducer(@Qualifier(RabbitMqConfig.RABBIT_MQ_JMS_TEMPLATE) JmsTemplate jmsTemplate,
                             ObjectMapper objectMapper) {
         this.jmsTemplate = jmsTemplate;
         this.objectMapper = objectMapper;
