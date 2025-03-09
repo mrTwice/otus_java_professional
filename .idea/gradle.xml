@@ -64,6 +64,14 @@
           </set>
         </option>
       </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/homework-17-spring-jms-activemq" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/homework-17-spring-jms-activemq" />
+          </set>
+        </option>
+      </GradleProjectSettings>
     </option>
   </component>
 </project>
