@@ -18,4 +18,5 @@
 * ### [Домашнее задание №14: Spring Data JDBC](homework-14-spring-data-jdbc/README.md)
 * ### [Домашнее задание №15: REST](homework-15-rest-service-on-spring/README.md)
 * ### [Домашнее задание №16: Serialization](homework-16-spring-boot-serialization/README.md)
+* ### [Домашнее задание №17: Spring-JMS](homework-17-spring-jms-activemq/README.md)
 
